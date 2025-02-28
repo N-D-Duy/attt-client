@@ -2,8 +2,9 @@ package org.duynguyen.atttclient.controller;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import lombok.extern.slf4j.Slf4j;
+import org.duynguyen.atttclient.utils.Log;
 
-//@Slf4j
 public class HelloController {
     @FXML
     private Label welcomeText;
@@ -11,7 +12,6 @@ public class HelloController {
     @FXML
     protected void onHelloButtonClick() {
         welcomeText.setText("Welcome to JavaFX Application!");
-        Log.info( "HelloController.onHelloButtonClick()");
-//        log.info( "HelloController.onHelloButtonClick()");
+        Log.info("Hello Button Clicked!");
     }
 }

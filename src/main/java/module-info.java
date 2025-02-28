@@ -4,8 +4,10 @@ module org.duynguyen.atttclient {
 
     requires org.controlsfx.controls;
     requires org.kordamp.ikonli.javafx;
-    requires org.apache.logging.log4j;
     requires static lombok;
+    requires org.slf4j;
+    requires org.apache.logging.log4j;
+    requires org.apache.logging.log4j.core;
 
     opens org.duynguyen.atttclient to javafx.fxml;
     exports org.duynguyen.atttclient;
