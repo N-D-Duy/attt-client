@@ -8,6 +8,7 @@ module org.duynguyen.atttclient {
     requires org.slf4j;
     requires org.apache.logging.log4j;
     requires org.apache.logging.log4j.core;
+    requires java.desktop;
 
     opens org.duynguyen.atttclient to javafx.fxml;
     exports org.duynguyen.atttclient;

@@ -2,10 +2,9 @@ package org.duynguyen.atttclient.controller;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
-import lombok.extern.slf4j.Slf4j;
 import org.duynguyen.atttclient.utils.Log;
 
-public class HelloController {
+public class FileTransferController {
     @FXML
     private Label welcomeText;
 

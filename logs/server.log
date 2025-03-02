@@ -1,0 +1,3 @@
+[2025-03-02 22:52:48 ERROR (JavaFX Application Thread)] - Error switching to main screen: Error resolving onAction='#onHelloButtonClick', either the event handler is not in the Namespace or there is an error in the script.
+/home/dnd/IdeaProjects/attt-client/target/classes/org/duynguyen/atttclient/main.fxml:15
+
