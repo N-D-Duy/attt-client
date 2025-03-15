@@ -1,4 +1,7 @@
 package org.duynguyen.atttclient.models;
 
-public record User(String username) {
+import lombok.Builder;
+
+@Builder
+public record User(int id, String username) {
 }

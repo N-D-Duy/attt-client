@@ -1,4 +1,4 @@
-package org.duynguyen.atttclient.controller;
+package org.duynguyen.atttclient.presentation;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;

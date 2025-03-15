@@ -12,6 +12,6 @@ module org.duynguyen.atttclient {
 
     opens org.duynguyen.atttclient to javafx.fxml;
     exports org.duynguyen.atttclient;
-    exports org.duynguyen.atttclient.controller;
-    opens org.duynguyen.atttclient.controller to javafx.fxml;
+    exports org.duynguyen.atttclient.presentation;
+    opens org.duynguyen.atttclient.presentation to javafx.fxml;
 }

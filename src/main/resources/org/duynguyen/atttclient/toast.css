@@ -1,0 +1,14 @@
+.toast-container {
+    -fx-background-color: #df7237;
+    -fx-background-radius: 5;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0.5, 0.0, 0.0);
+    -fx-padding: 10;
+    -fx-min-width: 280px;
+    -fx-clip-to-bounds: false;
+}
+
+.toast-message {
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-overflow: visible;
+}
