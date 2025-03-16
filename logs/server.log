@@ -5,3 +5,32 @@
 [2025-03-15 15:37:00 ERROR (Thread-1)] - java.net.ConnectException: Connection refused
 [2025-03-15 15:47:34 ERROR (Thread-1)] - java.net.ConnectException: Connection refused
 [2025-03-15 16:59:02 ERROR (Thread-1)] - java.net.ConnectException: Connection refused
+[2025-03-15 21:29:42 ERROR (Thread-1)] - java.net.ConnectException: Connection refused
+[2025-03-15 21:51:47 ERROR (Thread-3)] - messageNotLogin: Index 2 out of bounds for length 2
+[2025-03-15 21:55:11 ERROR (Thread-3)] - messageNotLogin: Index 2 out of bounds for length 2
+[2025-03-15 22:05:59 ERROR (Thread-3)] - messageNotLogin: Index 2 out of bounds for length 2
+[2025-03-15 22:06:10 ERROR (Thread-3)] - messageNotLogin: Index 2 out of bounds for length 2
+[2025-03-16 13:07:40 ERROR (Thread-1)] - java.net.ConnectException: Connection refused
+[2025-03-16 13:21:09 ERROR (Thread-3)] - Lỗi khi chuẩn bị nhận file: Downloads/094edcf1-7976-4c65-9dc1-87df8dc24e78.des (No such file or directory)
+[2025-03-16 14:03:54 ERROR (Thread-3)] - messageNotLogin: null
+[2025-03-16 14:05:16 ERROR (Thread-3)] - messageNotLogin: null
+[2025-03-16 14:06:45 ERROR (Thread-3)] - messageNotLogin: null
+[2025-03-16 14:11:50 ERROR (Thread-3)] - message not auth: null
+[2025-03-16 14:14:22 ERROR (Thread-3)] - message not auth: null
+[2025-03-16 14:15:13 ERROR (Thread-3)] - message not auth: null
+[2025-03-16 14:16:29 ERROR (Thread-3)] - message not auth: null
+[2025-03-16 15:16:03 ERROR (Thread-3)] - message not auth: null
+[2025-03-16 15:32:49 ERROR (Thread-3)] - message not auth: null
+[2025-03-16 15:35:03 ERROR (Thread-3)] - message not auth: null
+[2025-03-16 15:41:32 ERROR (Thread-3)] - message not auth: null
+[2025-03-16 15:51:53 ERROR (Thread-3)] - message not auth: null
+[2025-03-16 15:53:29 ERROR (Thread-3)] - message not auth: null
+[2025-03-16 16:03:44 ERROR (Thread-3)] - message not auth: null
+[2025-03-16 16:08:36 ERROR (Thread-3)] - message not auth: null
+[2025-03-16 16:16:46 ERROR (Thread-3)] - message not auth: null
+[2025-03-16 16:19:24 ERROR (Thread-3)] - message not auth: null
+[2025-03-16 16:27:56 ERROR (Thread-3)] - message not auth: null
+[2025-03-16 16:28:35 ERROR (Thread-3)] - message not auth: null
+[2025-03-16 17:09:04 ERROR (Thread-1)] - java.net.ConnectException: Connection refused
+[2025-03-16 17:20:30 ERROR (Thread-1)] - java.net.ConnectException: Connection refused
+[2025-03-16 17:20:34 ERROR (Thread-1)] - java.net.ConnectException: Connection refused

@@ -70,7 +70,6 @@ public class LoginController {
             props.setProperty("savedPassword", password);
             props.setProperty("rememberMe", "true");
             saveConfig(props);
-            Log.info("Credentials saved successfully");
         } catch (IOException e) {
             Log.error("Failed to save credentials: " + e.getMessage());
         }
@@ -83,7 +82,6 @@ public class LoginController {
             props.remove("savedPassword");
             props.setProperty("rememberMe", "false");
             saveConfig(props);
-            Log.info("Saved credentials cleared");
         } catch (IOException e) {
             Log.error("Failed to clear credentials: " + e.getMessage());
         }

@@ -17,6 +17,7 @@ import org.duynguyen.atttclient.utils.Log;
 
 public class Session implements ISession {
     public String username;
+    public int id;
     public static Session instance;
     private byte[] key;
     public Socket sc;
@@ -44,8 +45,8 @@ public class Session implements ISession {
     public Session(String host, int port) {
         this.host = host;
         this.port = port;
-        controller = new Controller(this);
         service = new Service(this);
+        controller = new Controller(this);
         instance = this;
     }
 
@@ -117,60 +118,34 @@ public class Session implements ISession {
         }
     }
 
-    /*
-     * Trường hợp value == CMD.FULL_SIZE:
-    Ghi m.getCommand() (mã lệnh gốc).
-    Ghi 4 byte biểu diễn num (32 bit):
-        byte2 = writeKey((byte) (num >> 24)): byte cao nhất (bits từ 24–31).
-        byte3 = writeKey((byte) (num >> 16)): byte thứ hai (bits từ 16–23).
-        byte4 = writeKey((byte) (num >> 8)): byte thứ ba (bits từ 8–15).
-        byte5 = writeKey((byte) (num & 255)): byte thấp nhất (bits từ 0–7).
-
-    * Trường hợp value != CMD.FULL_SIZE và sendKeyComplete = true:
-    Ghi 2 byte biểu diễn num (16 bit):
-        byte6 = writeKey((byte) (num >> 8)): byte cao (bits từ 8–15).
-        byte7 = writeKey((byte) (num & 255)): byte thấp (bits từ 0–7).
-
-    * Trường hợp value != CMD.FULL_SIZE và sendKeyComplete = false:
-    Ghi trực tiếp 2 byte không mã hóa:
-        dos.writeByte(num & 0xFF00): byte cao.
-        dos.writeByte(num & 0xFF): byte thấp.
-     *
-    */
     private void doSendMessage(Message m) {
         try {
             byte[] data = m.getData();
             byte value = m.getCommand();
-            int num = data.length;
-            value = num > Short.MAX_VALUE ? CMD.FULL_SIZE : value;
+            int num = data.length;  // Kích thước dữ liệu
+
+            // GIỮ NGUYÊN COMMAND, KHÔNG ĐỔI SANG CMD.FULL_SIZE
             byte b = value;
             if (getKeyCompleted) {
                 b = writeKey(value);
             }
+
             dos.writeByte(b);
-            if (value == CMD.FULL_SIZE) {
-                if (getKeyCompleted) {
-                    dos.writeByte(writeKey(m.getCommand()));
-                } else {
-                    dos.writeByte(m.getCommand());
-                }
-                int byte2 = writeKey((byte) (num >> 24));
-                dos.writeByte(byte2);
-                int byte3 = writeKey((byte) (num >> 16));
-                dos.writeByte(byte3);
-                int byte4 = writeKey((byte) (num >> 8));
-                dos.writeByte(byte4);
-                int byte5 = writeKey((byte) (num & 255));
-                dos.writeByte(byte5);
-            } else if (getKeyCompleted) {
-                int byte6 = writeKey((byte) (num >> 8));
-                dos.writeByte(byte6);
-                int byte7 = writeKey((byte) (num & 255));
-                dos.writeByte(byte7);
+
+            // GHI KÍCH THƯỚC 4 BYTE (KHÔNG BỊ GIỚI HẠN 65535)
+            if (getKeyCompleted) {
+                dos.writeByte(writeKey((byte) (num >> 24)));
+                dos.writeByte(writeKey((byte) (num >> 16)));
+                dos.writeByte(writeKey((byte) (num >> 8)));
+                dos.writeByte(writeKey((byte) (num & 255)));
             } else {
-                dos.writeByte(num & 0xFF00);
+                dos.writeByte((num >> 24) & 0xFF);
+                dos.writeByte((num >> 16) & 0xFF);
+                dos.writeByte((num >> 8) & 0xFF);
                 dos.writeByte(num & 0xFF);
             }
+
+            // MÃ HÓA VÀ GỬI DỮ LIỆU
             if (getKeyCompleted) {
                 for (int i = 0; i < num; i++) {
                     data[i] = writeKey(data[i]);
@@ -182,6 +157,7 @@ public class Session implements ISession {
             Log.error("doSendMessage err", e);
         }
     }
+
 
     public byte readKey(byte b) {
         byte b2 = this.curR;
@@ -365,23 +341,24 @@ public class Session implements ISession {
             }
         }
 
-        private long getCurTime() {
-            return System.currentTimeMillis();
-        }
-
         private Message readMessage() throws Exception {
             try {
                 byte cmd = dis.readByte();
-                if(getKeyCompleted){
+                if (getKeyCompleted) {
                     cmd = readKey(cmd);
                 }
+
                 int size;
                 if (getKeyCompleted) {
                     byte b1 = dis.readByte();
                     byte b2 = dis.readByte();
-                    size = (readKey(b1) & 255) << 8 | readKey(b2) & 255;
+                    byte b3 = dis.readByte();
+                    byte b4 = dis.readByte();
+                    size = (readKey(b1) & 255) << 24 | (readKey(b2) & 255) << 16 |
+                            (readKey(b3) & 255) << 8  | (readKey(b4) & 255);
                 } else {
-                    size = dis.readUnsignedShort();
+                    size = (dis.readByte() & 255) << 24 | (dis.readByte() & 255) << 16 |
+                            (dis.readByte() & 255) << 8  | (dis.readByte() & 255);
                 }
 
                 byte[] data = new byte[size];
@@ -393,6 +370,7 @@ public class Session implements ISession {
                         byteRead += len;
                     }
                 }
+
                 if (getKeyCompleted) {
                     for (int i = 0; i < data.length; i++) {
                         data[i] = readKey(data[i]);
