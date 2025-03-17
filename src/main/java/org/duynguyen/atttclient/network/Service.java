@@ -191,4 +191,21 @@ public class Service {
             Log.error("Lỗi khi gửi hoàn thành truyền file: " + ex.getMessage());
         }
     }
+
+    // Add this method to your Service class
+public void cancelFileTransfer(String transferId) {
+    // Send a message to the server to cancel the file transfer
+    try {
+        Message ms = new Message();
+        ms.setCommand(CMD.NOT_AUTH);
+        DataOutputStream dos = ms.writer();
+        dos.writeByte(CMD.FILE_TRANSFER_CANCEL);
+        dos.writeUTF(transferId);
+        dos.flush();
+        sendMessage(ms);
+        Log.info("Sending cancel transfer request for " + transferId);
+    } catch (IOException e) {
+        Log.error("Error sending cancel transfer request: " + e.getMessage());
+    }
+}
 }

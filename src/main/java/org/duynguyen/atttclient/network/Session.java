@@ -52,7 +52,7 @@ public class Session implements ISession {
 
     public static Session getInstance() {
         if(instance == null) {
-            instance = new Session("localhost", 8080);
+            instance = new Session("20.243.124.24", 1609);
         }
         return instance;
     }
@@ -122,17 +122,14 @@ public class Session implements ISession {
         try {
             byte[] data = m.getData();
             byte value = m.getCommand();
-            int num = data.length;  // Kích thước dữ liệu
+            int num = data.length;
 
-            // GIỮ NGUYÊN COMMAND, KHÔNG ĐỔI SANG CMD.FULL_SIZE
             byte b = value;
             if (getKeyCompleted) {
                 b = writeKey(value);
             }
 
             dos.writeByte(b);
-
-            // GHI KÍCH THƯỚC 4 BYTE (KHÔNG BỊ GIỚI HẠN 65535)
             if (getKeyCompleted) {
                 dos.writeByte(writeKey((byte) (num >> 24)));
                 dos.writeByte(writeKey((byte) (num >> 16)));
@@ -145,7 +142,6 @@ public class Session implements ISession {
                 dos.writeByte(num & 0xFF);
             }
 
-            // MÃ HÓA VÀ GỬI DỮ LIỆU
             if (getKeyCompleted) {
                 for (int i = 0; i < num; i++) {
                     data[i] = writeKey(data[i]);
@@ -376,7 +372,6 @@ public class Session implements ISession {
                         data[i] = readKey(data[i]);
                     }
                 }
-
                 return new Message(cmd, data);
             } catch (EOFException e) {
                 return null;

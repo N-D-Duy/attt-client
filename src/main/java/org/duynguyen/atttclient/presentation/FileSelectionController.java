@@ -1,17 +1,19 @@
 package org.duynguyen.atttclient.presentation;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import lombok.Setter;
 import org.duynguyen.atttclient.models.FileTransfer;
 import org.duynguyen.atttclient.network.Session;
 import org.duynguyen.atttclient.utils.Log;
 
 import java.io.File;
 
-public class FileSelectionController {
+public class FileSelectionController implements FileTransfer.TransferCompleteListener{
     @FXML
     private Label fileInfoLabel;
 
@@ -27,10 +29,53 @@ public class FileSelectionController {
     private File selectedFile;
     private File encryptedFile;
 
+    @Setter
+    private MainController mainController;
+
     @FXML
     public void initialize() {
         btnEncryptFile.setDisable(true);
         btnSendFile.setDisable(true);
+
+        if (fileTransfer != null) {
+            fileTransfer.setTransferCompleteListener(this);
+        }
+    }
+
+    @FXML
+    private void onSendFile() {
+        if (encryptedFile != null) {
+            session.getService().sendFileInfo(fileTransfer.getTransferId(), selectedFile.getName(), encryptedFile.length());
+            btnSendFile.setDisable(true);
+            fileInfoLabel.setText("Đang gửi file...");
+        }
+    }
+
+    @Override
+    public void onTransferComplete() {
+        javafx.application.Platform.runLater(() -> {
+            fileInfoLabel.setText("Gửi file thành công!");
+            Stage stage = (Stage) fileInfoLabel.getScene().getWindow();
+            stage.close();
+
+            if (mainController != null) {
+                mainController.showMainScreen();
+            }
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Thông báo");
+            alert.setHeaderText(null);
+            alert.setContentText("Gửi file thành công!");
+            alert.showAndWait();
+        });
+    }
+
+    @Override
+    public void onTransferFailed(String reason) {
+        javafx.application.Platform.runLater(() -> {
+            fileInfoLabel.setText("Gửi file thất bại: " + reason);
+            btnSendFile.setDisable(false);
+        });
     }
 
     @FXML
@@ -60,13 +105,6 @@ public class FileSelectionController {
                 btnEncryptFile.setDisable(true);
                 btnSendFile.setDisable(false);
             }
-        }
-    }
-
-    @FXML
-    private void onSendFile() {
-        if (encryptedFile != null) {
-            session.getService().sendFileInfo(fileTransfer.getTransferId(), selectedFile.getName(), encryptedFile.length());
         }
     }
 }

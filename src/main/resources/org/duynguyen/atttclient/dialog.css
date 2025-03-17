@@ -1,0 +1,31 @@
+.file-transfer-dialog {
+    -fx-background-color: white;
+    -fx-background-radius: 5px;
+    -fx-border-radius: 5px;
+    -fx-border-color: #cccccc;
+    -fx-border-width: 1px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 5);
+    -fx-padding: 15px;
+}
+
+.file-info-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+.status-label {
+    -fx-font-style: italic;
+    -fx-text-fill: #555555;
+}
+
+.cancel-button {
+    -fx-background-color: #ff4444;
+    -fx-text-fill: white;
+    -fx-background-radius: 3px;
+    -fx-cursor: hand;
+    -fx-padding: 5px 10px;
+}
+
+.cancel-button:hover {
+    -fx-background-color: #ff6666;
+}

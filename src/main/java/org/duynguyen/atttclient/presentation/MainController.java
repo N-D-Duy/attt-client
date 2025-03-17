@@ -3,10 +3,14 @@ package org.duynguyen.atttclient.presentation;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
@@ -79,21 +83,75 @@ public class MainController {
         }
     }
 
+
     @FXML
     private void onSendFileButtonClick() {
         User selectedUser = onlineUsersListView.getSelectionModel().getSelectedItem();
         if (selectedUser != null) {
+            disableUI();
+            showWaitingPopup("Đang chờ phản hồi từ " + selectedUser.username() + "...");
+
             session.getService().sendHandShakeRequest(selectedUser.id());
         }
     }
 
+    private void disableUI() {
+        onlineUsersListView.setDisable(true);
+    }
+
+    private void enableUI() {
+        onlineUsersListView.setDisable(false);
+    }
+
+    private Stage waitingStage;
+
+    private void showWaitingPopup(String message) {
+        Platform.runLater(() -> {
+            if (waitingStage != null) {
+                waitingStage.close();
+            }
+
+            Stage stage = new Stage();
+            waitingStage = stage;
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Đang chờ...");
+
+            VBox vbox = new VBox(10);
+            vbox.setAlignment(Pos.CENTER);
+            vbox.setPadding(new Insets(20));
+
+            Label label = new Label(message);
+            ProgressIndicator progressIndicator = new ProgressIndicator();
+
+            vbox.getChildren().addAll(progressIndicator, label);
+            Scene scene = new Scene(vbox, 300, 150);
+            stage.setScene(scene);
+            stage.show();
+        });
+    }
+
     public void onHandshakeSuccess() {
-        Platform.runLater(this::openFileSelectionScreen);
+        Platform.runLater(() -> {
+            enableUI();
+            closeWaitingPopup();
+            openFileSelectionScreen();
+        });
     }
 
     public void onHandshakeFailed() {
         Platform.runLater(() -> {
+            enableUI();
+            closeWaitingPopup();
             showErrorDialog("Handshake thất bại. Vui lòng thử lại sau.");
+        });
+    }
+
+
+    private void closeWaitingPopup() {
+        Platform.runLater(() -> {
+            if (waitingStage != null) {
+                waitingStage.close();
+            }
         });
     }
 
@@ -109,6 +167,13 @@ public class MainController {
         } catch (IOException e) {
             Log.error("Không thể mở màn hình chọn file: " + e.getMessage());
         }
+    }
+
+    public void showMainScreen() {
+        Stage primaryStage = HelloApplication.getPrimaryStage();
+                primaryStage.show();
+        primaryStage.setIconified(false);
+        primaryStage.toFront();
     }
 
     private void showErrorDialog(String message) {

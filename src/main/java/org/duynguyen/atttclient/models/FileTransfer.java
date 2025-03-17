@@ -30,6 +30,18 @@ public class FileTransfer {
     private File targetFile;
     private File encryptedFile;
 
+    public interface TransferCompleteListener {
+        void onTransferComplete();
+        void onTransferFailed(String reason);
+    }
+
+    private TransferCompleteListener listener;
+
+    public void setTransferCompleteListener(TransferCompleteListener listener) {
+        this.listener = listener;
+    }
+
+
     private static final int DEFAULT_CHUNK_SIZE = 64 * 1024;
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -197,10 +209,16 @@ public class FileTransfer {
                 decryptFile();
             } else {
                 state = FileTransferState.COMPLETED;
+                if (listener != null) {
+                    listener.onTransferComplete();
+                }
             }
         } catch (IOException e) {
             state = FileTransferState.FAILED;
             Log.error("Lỗi khi hoàn thành truyền file: " + e.getMessage());
+            if (listener != null) {
+                listener.onTransferFailed(e.getMessage());
+            }
         }
     }
 }

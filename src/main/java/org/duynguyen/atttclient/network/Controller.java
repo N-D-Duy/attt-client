@@ -9,7 +9,8 @@ import org.duynguyen.atttclient.models.FileTransfer;
 import org.duynguyen.atttclient.models.User;
 import org.duynguyen.atttclient.presentation.MainController;
 import org.duynguyen.atttclient.presentation.StartupController;
-import org.duynguyen.atttclient.presentation.ToastMessage;
+import org.duynguyen.atttclient.presentation.widgets.FileTransferDialog;
+import org.duynguyen.atttclient.presentation.widgets.ToastMessage;
 import org.duynguyen.atttclient.protocol.Message;
 import org.duynguyen.atttclient.utils.CMD;
 import org.duynguyen.atttclient.utils.Log;
@@ -149,18 +150,37 @@ public class Controller implements IMessageHandler {
                             Log.info("file info: " + fileName + " " + fileSize);
                             FileTransfer fileTransfer = FileTransfer.instance;
                             fileTransfer.prepareForReceiving(fileName, fileSize);
+
+                            Platform.runLater(() -> {
+                                FileTransferDialog.getInstance()
+                                        .show(fileTransfer)
+                                        .onCancel(transfer -> {
+                                            service.cancelFileTransfer(transfer.getTransferId());
+                                        })
+                                        .onComplete(transfer -> {
+                                            ToastMessage.showMessage("File received: " + transfer.getFileName());
+                                        });
+                            });
                             service.sendFileInfoReceived();
                         }
                         break;
                     case CMD.FILE_INFO_RECEIVED:
-                        Log.info("file info received");
-                        try(DataInputStream _dis = ms.reader()){
+                        try (DataInputStream _dis = ms.reader()) {
                             String transferId = _dis.readUTF();
+                            Platform.runLater(() -> {
+                                FileTransferDialog.getInstance()
+                                        .show(FileTransfer.instance)
+                                        .onCancel(transfer -> {
+                                            service.cancelFileTransfer(transfer.getTransferId());
+                                        })
+                                        .onComplete(transfer -> {
+                                            ToastMessage.showMessage("File sent successfully: " + transfer.getFileName());
+                                        });
+                            });
                             service.sendFileChunk();
                         }
                         break;
                     case CMD.FILE_CHUNK:
-                        Log.info("File chunk");
                         try (DataInputStream _dis = ms.reader()) {
                             String transferId = _dis.readUTF();
                             int size = _dis.readInt();
@@ -170,11 +190,20 @@ public class Controller implements IMessageHandler {
                         }
                         break;
                     case CMD.CHUNK_ACK:
-                        Log.info("Chunk ack");
                         service.handleChunkAck();
                         break;
                     case CMD.FILE_TRANSFER_COMPLETE:
-                        Log.info("File transfer complete");
+                        try (DataInputStream _dis = ms.reader()) {
+                            String transferId = _dis.readUTF();
+                            Log.info("File transfer complete: " + transferId);
+                            if (FileTransfer.instance != null &&
+                                    FileTransfer.instance.getTransferId().equals(transferId) &&
+                                    FileTransfer.instance.isSender()) {
+                                FileTransfer.instance.complete();
+                            }
+                        } catch (Exception e) {
+                            Log.error("Error processing FILE_TRANSFER_COMPLETE: " + e.getMessage());
+                        }
                         break;
                     case CMD.FILE_TRANSFER_END:
                         Log.info("File transfer end");
