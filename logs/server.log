@@ -34,3 +34,4 @@
 [2025-03-16 17:09:04 ERROR (Thread-1)] - java.net.ConnectException: Connection refused
 [2025-03-16 17:20:30 ERROR (Thread-1)] - java.net.ConnectException: Connection refused
 [2025-03-16 17:20:34 ERROR (Thread-1)] - java.net.ConnectException: Connection refused
+[2025-03-18 10:48:32 ERROR (Thread-1)] - java.net.ConnectException: Connection refused
