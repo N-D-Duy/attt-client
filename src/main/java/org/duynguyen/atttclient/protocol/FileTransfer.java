@@ -1,4 +1,4 @@
-package org.duynguyen.atttclient.models;
+package org.duynguyen.atttclient.protocol;
 
 import lombok.Getter;
 import org.duynguyen.atttclient.network.Session;

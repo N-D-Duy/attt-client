@@ -3,7 +3,6 @@ package org.duynguyen.atttclient.utils;
 import java.io.*;
 
 public class DesUtils {
-
     private static final int BLOCK_SIZE = 8;
     private static final int[] IP = {
             58, 50, 42, 34, 26, 18, 10, 2,

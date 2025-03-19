@@ -7,7 +7,7 @@ import javafx.scene.control.Label;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Setter;
-import org.duynguyen.atttclient.models.FileTransfer;
+import org.duynguyen.atttclient.protocol.FileTransfer;
 import org.duynguyen.atttclient.network.Session;
 import org.duynguyen.atttclient.utils.Log;
 

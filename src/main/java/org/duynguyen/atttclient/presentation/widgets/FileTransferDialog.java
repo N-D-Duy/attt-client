@@ -10,7 +10,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.Setter;
-import org.duynguyen.atttclient.models.FileTransfer;
+import org.duynguyen.atttclient.protocol.FileTransfer;
 import org.duynguyen.atttclient.utils.Log;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -78,7 +78,6 @@ public class FileTransferDialog {
     }
 
     public FileTransferDialog show(FileTransfer fileTransfer) {
-        Log.info("show dialog");
         if (dialogContainer == null) {
             Log.error("Dialog container not set. Call FileTransferDialog.setDialogContainer first.");
             return this;
@@ -91,9 +90,7 @@ public class FileTransferDialog {
             Platform.runLater(() -> {
                 if (!dialogContainer.getChildren().contains(dialog)) {
                     dialogContainer.getChildren().add(dialog);
-                    Log.info("show dialog here");
                 }
-                Log.info("Dialog container children count: " + dialogContainer.getChildren().size());
             });
         }
         

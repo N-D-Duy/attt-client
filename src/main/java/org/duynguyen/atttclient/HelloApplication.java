@@ -30,7 +30,7 @@ public class HelloApplication extends Application {
     }
 
     public static void main(String[] args) {
-        session = new Session("20.243.124.24", 1690);
+        session = new Session("localhost", 1690);
         session.connect();
         launch();
     }

@@ -5,7 +5,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import lombok.Setter;
-import org.duynguyen.atttclient.models.FileTransfer;
+import org.duynguyen.atttclient.protocol.FileTransfer;
 import org.duynguyen.atttclient.models.User;
 import org.duynguyen.atttclient.presentation.MainController;
 import org.duynguyen.atttclient.presentation.StartupController;
@@ -16,7 +16,6 @@ import org.duynguyen.atttclient.utils.CMD;
 import org.duynguyen.atttclient.utils.Log;
 
 import java.io.DataInputStream;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -195,7 +194,6 @@ public class Controller implements IMessageHandler {
                     case CMD.FILE_TRANSFER_COMPLETE:
                         try (DataInputStream _dis = ms.reader()) {
                             String transferId = _dis.readUTF();
-                            Log.info("File transfer complete: " + transferId);
                             if (FileTransfer.instance != null &&
                                     FileTransfer.instance.getTransferId().equals(transferId) &&
                                     FileTransfer.instance.isSender()) {

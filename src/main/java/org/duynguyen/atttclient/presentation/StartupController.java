@@ -41,7 +41,7 @@ public class StartupController {
 
     private void processLogin(){
         boolean hasCredentials = Boolean.parseBoolean(userConfig.getProperty("rememberMe", "false")) &&
-                userConfig.getProperty("savedUsername", "").length() > 0;
+                !userConfig.getProperty("savedUsername", "").isEmpty();
 
         if (hasCredentials) {
             String username = userConfig.getProperty("savedUsername", "");

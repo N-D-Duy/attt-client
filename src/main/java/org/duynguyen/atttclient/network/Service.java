@@ -1,6 +1,6 @@
 package org.duynguyen.atttclient.network;
 
-import org.duynguyen.atttclient.models.FileTransfer;
+import org.duynguyen.atttclient.protocol.FileTransfer;
 import org.duynguyen.atttclient.protocol.Message;
 import org.duynguyen.atttclient.utils.Log;
 import org.duynguyen.atttclient.utils.CMD;
@@ -191,10 +191,8 @@ public class Service {
             Log.error("Lỗi khi gửi hoàn thành truyền file: " + ex.getMessage());
         }
     }
-
-    // Add this method to your Service class
+    
 public void cancelFileTransfer(String transferId) {
-    // Send a message to the server to cancel the file transfer
     try {
         Message ms = new Message();
         ms.setCommand(CMD.NOT_AUTH);
