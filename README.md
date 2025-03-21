@@ -11,7 +11,7 @@ This is a simple file transfer application using TCP/IP. The application is impl
 ## How to run
 1. Clone the repository
 2. Install Maven, Jdk 17
-3. Run the server
+3. Run
     ```bash
     mvn clean javafx:run
     ```

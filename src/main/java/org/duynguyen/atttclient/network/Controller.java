@@ -5,6 +5,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import lombok.Setter;
+import org.duynguyen.atttclient.presentation.widgets.FileTransferAlert;
 import org.duynguyen.atttclient.protocol.FileTransfer;
 import org.duynguyen.atttclient.models.User;
 import org.duynguyen.atttclient.presentation.MainController;
@@ -150,15 +151,23 @@ public class Controller implements IMessageHandler {
                             FileTransfer fileTransfer = FileTransfer.instance;
                             fileTransfer.prepareForReceiving(fileName, fileSize);
 
+                            /*Platform.runLater(() -> {
+                                try {
+                                    FileTransferDialog dialog = FileTransferDialog.getInstance();
+                                    dialog.show(fileTransfer)
+                                            .onCancel(transfer -> {
+                                                service.cancelFileTransfer(transfer.getTransferId());
+                                            })
+                                            .onComplete(transfer -> {
+                                                ToastMessage.showMessage("File received: " + transfer.getFileName());
+                                            });
+                                } catch (Exception e) {
+                                    Log.error("Error showing dialog: " + e.getMessage());
+                                    e.printStackTrace();
+                                }
+                            });*/
                             Platform.runLater(() -> {
-                                FileTransferDialog.getInstance()
-                                        .show(fileTransfer)
-                                        .onCancel(transfer -> {
-                                            service.cancelFileTransfer(transfer.getTransferId());
-                                        })
-                                        .onComplete(transfer -> {
-                                            ToastMessage.showMessage("File received: " + transfer.getFileName());
-                                        });
+                                FileTransferAlert.show(fileTransfer);
                             });
                             service.sendFileInfoReceived();
                         }
@@ -166,7 +175,7 @@ public class Controller implements IMessageHandler {
                     case CMD.FILE_INFO_RECEIVED:
                         try (DataInputStream _dis = ms.reader()) {
                             String transferId = _dis.readUTF();
-                            Platform.runLater(() -> {
+                            /*Platform.runLater(() -> {
                                 FileTransferDialog.getInstance()
                                         .show(FileTransfer.instance)
                                         .onCancel(transfer -> {
@@ -175,6 +184,9 @@ public class Controller implements IMessageHandler {
                                         .onComplete(transfer -> {
                                             ToastMessage.showMessage("File sent successfully: " + transfer.getFileName());
                                         });
+                            });*/
+                            Platform.runLater(() -> {
+                                FileTransferAlert.show(FileTransfer.instance);
                             });
                             service.sendFileChunk();
                         }

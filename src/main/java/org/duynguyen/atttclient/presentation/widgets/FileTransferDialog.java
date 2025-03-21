@@ -30,14 +30,17 @@ public class FileTransferDialog {
     private final AtomicBoolean shouldUpdate = new AtomicBoolean(false);
     private Consumer<FileTransfer> onCancelCallback;
     private Consumer<FileTransfer> onCompleteCallback;
-    
+
     private FileTransferDialog() {
         dialog = new VBox(10);
         dialog.getStyleClass().add("file-transfer-dialog");
         dialog.setAlignment(Pos.CENTER);
         dialog.setMaxWidth(400);
         dialog.setPrefWidth(400);
-        
+        dialog.setMinHeight(150);
+        dialog.setStyle("-fx-background-color: rgba(255,255,255,0.9); -fx-border-color: red; -fx-border-width: 2;");  // More visible for debugging
+        dialog.setVisible(true);
+
         fileInfoLabel = new Label();
         fileInfoLabel.getStyleClass().add("file-info-label");
         
@@ -82,18 +85,21 @@ public class FileTransferDialog {
             Log.error("Dialog container not set. Call FileTransferDialog.setDialogContainer first.");
             return this;
         }
-        
+
         currentTransfer = fileTransfer;
         updateUI();
-        
+
         if (!isShowing.getAndSet(true)) {
             Platform.runLater(() -> {
-                if (!dialogContainer.getChildren().contains(dialog)) {
-                    dialogContainer.getChildren().add(dialog);
+                try {
+                    if (!dialogContainer.getChildren().contains(dialog)) {
+                        dialogContainer.getChildren().add(dialog);
+                    }
+                } catch (Exception e) {
+                    Log.error("Error adding dialog to container: " + e.getMessage());
                 }
             });
         }
-        
         shouldUpdate.set(true);
         return this;
     }
@@ -142,6 +148,7 @@ public class FileTransferDialog {
                 }
                 case DECRYPTING -> statusLabel.setText("Decrypting file...");
                 case FAILED -> statusLabel.setText("Transfer failed!");
+                default -> Log.info("Unknown state: " + state);
             }
         });
     }
