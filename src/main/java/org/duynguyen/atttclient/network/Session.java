@@ -56,13 +56,14 @@ public class Session implements ISession {
         }
         return instance;
     }
-    public void connect() {
+    public boolean connect() {
         if(!connected && !connecting){
             getKeyCompleted = false;
             sc = null;
             initThread = new Thread(this::networkInit);
             initThread.start();
         }
+        return connected;
     }
 
     public void networkInit(){

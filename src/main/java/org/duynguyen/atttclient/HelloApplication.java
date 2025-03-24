@@ -2,16 +2,20 @@ package org.duynguyen.atttclient;
 
 import java.io.IOException;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import lombok.Getter;
+import org.duynguyen.atttclient.network.ConnectionManager;
 import org.duynguyen.atttclient.network.Session;
 import org.duynguyen.atttclient.presentation.widgets.GlobalUI;
+import org.duynguyen.atttclient.utils.Log;
 
 public class HelloApplication extends Application {
   @Getter public static Stage primaryStage;
   private static Session session;
+  private static ConnectionManager connectionManager;
 
   @Override
   public void start(Stage stage) throws IOException {
@@ -22,30 +26,42 @@ public class HelloApplication extends Application {
     stage.setScene(scene);
     GlobalUI.init(stage);
     stage.setOnCloseRequest(
-        event -> {
-          System.out.println("Closing application...");
-          closeSession();
-        });
+            event -> {
+              System.out.println("Closing application...");
+              closeConnection();
+            });
     stage.show();
+    establishConnection();
   }
 
   public static void main(String[] args) {
-    session = new Session("localhost", 1690);
-    session.connect();
+    connectionManager = new ConnectionManager("localhost", 1690);
     launch();
+  }
+
+  private void establishConnection() {
+    connectionManager.connect()
+            .thenAccept(s -> {
+              session = s;
+              Log.info("Connected to server successfully");
+            })
+            .exceptionally(ex -> {
+              Log.error("Failed to connect: " + ex.getMessage());
+              return null;
+            });
   }
 
   @Override
   public void stop() throws Exception {
     System.out.println("Application is stopping...");
-    closeSession();
+    closeConnection();
     super.stop();
   }
 
-  private void closeSession() {
-    if (session != null) {
-      session.close();
-      System.out.println("Session closed.");
+  private void closeConnection() {
+    if (connectionManager != null) {
+      connectionManager.shutdown();
+      System.out.println("Connection closed.");
     }
   }
 }

@@ -35,3 +35,13 @@
 [2025-03-16 17:20:30 ERROR (Thread-1)] - java.net.ConnectException: Connection refused
 [2025-03-16 17:20:34 ERROR (Thread-1)] - java.net.ConnectException: Connection refused
 [2025-03-18 10:48:32 ERROR (Thread-1)] - java.net.ConnectException: Connection refused
+[2025-03-21 21:39:36 ERROR (JavaFX Application Thread)] - Connection attempt 1 failed: Could not connect to server
+[2025-03-21 21:39:36 ERROR (Thread-2)] - java.net.ConnectException: Connection refused
+[2025-03-21 21:39:39 ERROR (pool-2-thread-1)] - Connection attempt 2 failed: Could not connect to server
+[2025-03-21 21:39:39 ERROR (Thread-3)] - java.net.ConnectException: Connection refused
+[2025-03-21 21:39:44 ERROR (pool-2-thread-1)] - Connection attempt 3 failed: Could not connect to server
+[2025-03-21 21:39:44 ERROR (Thread-4)] - java.net.ConnectException: Connection refused
+[2025-03-21 21:39:54 ERROR (pool-2-thread-1)] - Connection attempt 4 failed: Could not connect to server
+[2025-03-21 21:39:54 ERROR (Thread-5)] - java.net.ConnectException: Connection refused
+[2025-03-21 21:40:09 ERROR (pool-2-thread-1)] - Connection attempt 5 failed: Could not connect to server
+[2025-03-21 21:40:09 ERROR (pool-2-thread-1)] - Failed to connect: java.lang.Exception: Failed to connect after 5 attempts
