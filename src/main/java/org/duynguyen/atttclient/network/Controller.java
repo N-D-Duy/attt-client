@@ -5,16 +5,16 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import lombok.Setter;
-import org.duynguyen.atttclient.presentation.widgets.FileTransferAlert;
-import org.duynguyen.atttclient.protocol.FileTransfer;
 import org.duynguyen.atttclient.models.User;
 import org.duynguyen.atttclient.presentation.MainController;
 import org.duynguyen.atttclient.presentation.StartupController;
-import org.duynguyen.atttclient.presentation.widgets.FileTransferDialog;
+import org.duynguyen.atttclient.presentation.widgets.FileTransferAlert;
 import org.duynguyen.atttclient.presentation.widgets.ToastMessage;
+import org.duynguyen.atttclient.protocol.FileTransfer;
 import org.duynguyen.atttclient.protocol.Message;
 import org.duynguyen.atttclient.utils.CMD;
 import org.duynguyen.atttclient.utils.Log;
+import org.duynguyen.atttclient.utils.Shared;
 
 import java.io.DataInputStream;
 import java.util.ArrayList;
@@ -133,7 +133,8 @@ public class Controller implements IMessageHandler {
                             for (int i = 0; i < keySize; i++) {
                                 keyDes[i] = _dis.readByte();
                             }
-                            new FileTransfer(_senderId, _receiverId, _transferId, keyDes);
+                            FileTransfer f = new FileTransfer(_senderId, _receiverId, _transferId, keyDes);
+                            Shared.addFileTransferSession(f);
                             if (_senderId == session.id) {
                                 MainController.getInstance().onHandshakeSuccess();
                             }
@@ -210,6 +211,7 @@ public class Controller implements IMessageHandler {
                                     FileTransfer.instance.getTransferId().equals(transferId) &&
                                     FileTransfer.instance.isSender()) {
                                 FileTransfer.instance.complete();
+                                Shared.removeFileTransferSession(transferId);
                             }
                         } catch (Exception e) {
                             Log.error("Error processing FILE_TRANSFER_COMPLETE: " + e.getMessage());
@@ -220,10 +222,18 @@ public class Controller implements IMessageHandler {
                         service.handleFileTransferEnd();
                         break;
                     case CMD.CHUNK_ERROR:
-                        Log.info("Chunk error");
+                        try(DataInputStream _dis = ms.reader()) {
+                            String transferId = _dis.readUTF();
+                            Log.error("Chunk error");
+                            Shared.removeFileTransferSession(transferId);
+                        }
                         break;
                     case CMD.FILE_TRANSFER_CANCEL:
-                        Log.info("File transfer cancel");
+                        try(DataInputStream _dis = ms.reader()) {
+                            String transferId = _dis.readUTF();
+                            Log.info("File transfer cancel");
+                            Shared.removeFileTransferSession(transferId);
+                        }
                         break;
                     default:
                         Log.info("default: " + command);
