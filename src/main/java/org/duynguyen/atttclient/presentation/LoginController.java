@@ -72,7 +72,6 @@ public class LoginController {
         String password = passwordField.getText();
 
         session.getService().login(username, password);
-
         session.setSaveCredentialsListener(() -> {
             Platform.runLater(() -> {
                 if (rememberMeCheckbox.isSelected()) {

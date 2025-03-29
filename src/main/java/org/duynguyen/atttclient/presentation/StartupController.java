@@ -32,7 +32,14 @@ public class StartupController {
     public static StartupController instance;
     @FXML
     public void initialize() {
-        Platform.runLater(this::navigateToLoginScreen);
+        new Thread(()->{
+            try {
+                Thread.sleep(1000);
+                Platform.runLater(this::navigateToLoginScreen);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
         instance = this;
     }
 
