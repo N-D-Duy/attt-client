@@ -296,7 +296,7 @@ public class Controller implements IMessageHandler {
                 Log.error("Error closing alert: " + e.getMessage());
             }
         }).start();
-
+        alert.showAndWait();
     }
 
     private void sendHandshakeResponse(int senderId, boolean accept) {
