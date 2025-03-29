@@ -43,7 +43,6 @@ public class HelloApplication extends Application {
     connectionManager.connect()
             .thenAccept(s -> {
               session = s;
-              Log.info("Connected to server successfully");
             })
             .exceptionally(ex -> {
               Log.error("Failed to connect: " + ex.getMessage());

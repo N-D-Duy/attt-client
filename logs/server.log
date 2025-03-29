@@ -45,3 +45,63 @@
 [2025-03-21 21:39:54 ERROR (Thread-5)] - java.net.ConnectException: Connection refused
 [2025-03-21 21:40:09 ERROR (pool-2-thread-1)] - Connection attempt 5 failed: Could not connect to server
 [2025-03-21 21:40:09 ERROR (pool-2-thread-1)] - Failed to connect: java.lang.Exception: Failed to connect after 5 attempts
+[2025-03-29 13:25:04 ERROR (JavaFX Application Thread)] - Connection attempt 1 failed: Could not connect to server
+[2025-03-29 13:25:07 ERROR (pool-2-thread-1)] - Connection attempt 2 failed: Could not connect to server
+[2025-03-29 13:25:12 ERROR (pool-2-thread-1)] - Connection attempt 3 failed: Could not connect to server
+[2025-03-29 13:25:12 ERROR (Thread-8)] - doSendMessage err
+java.lang.NullPointerException: Cannot invoke "java.io.DataOutputStream.writeByte(int)" because "this.dos" is null
+	at org.duynguyen.atttclient@1.0-SNAPSHOT/org.duynguyen.atttclient.network.Session.doSendMessage(Session.java:140) ~[classes/:?]
+	at org.duynguyen.atttclient@1.0-SNAPSHOT/org.duynguyen.atttclient.network.Session.doConnect(Session.java:96) ~[classes/:?]
+	at org.duynguyen.atttclient@1.0-SNAPSHOT/org.duynguyen.atttclient.network.Session.networkInit(Session.java:75) ~[classes/:?]
+	at java.base/java.lang.Thread.run(Thread.java:840) [?:?]
+[2025-03-29 13:25:12 ERROR (Thread-8)] - java.lang.NullPointerException: Cannot invoke "org.duynguyen.atttclient.network.IMessageHandler.onConnectOK()" because "this.controller" is null
+[2025-03-29 13:26:05 ERROR (JavaFX Application Thread)] - Connection attempt 1 failed: Could not connect to server
+[2025-03-29 13:27:05 ERROR (JavaFX Application Thread)] - Connection attempt 1 failed: Could not connect to server
+[2025-03-29 13:27:08 ERROR (pool-2-thread-1)] - Connection attempt 2 failed: Could not connect to server
+[2025-03-29 13:27:13 ERROR (pool-2-thread-1)] - Connection attempt 3 failed: Could not connect to server
+[2025-03-29 13:27:13 ERROR (Thread-8)] - doSendMessage err
+java.net.SocketException: Socket closed
+	at java.base/sun.nio.ch.NioSocketImpl.endWrite(NioSocketImpl.java:388) ~[?:?]
+	at java.base/sun.nio.ch.NioSocketImpl.implWrite(NioSocketImpl.java:427) ~[?:?]
+	at java.base/sun.nio.ch.NioSocketImpl.write(NioSocketImpl.java:445) ~[?:?]
+	at java.base/sun.nio.ch.NioSocketImpl$2.write(NioSocketImpl.java:831) ~[?:?]
+	at java.base/java.net.Socket$SocketOutputStream.write(Socket.java:1035) ~[?:?]
+	at java.base/java.net.Socket$SocketOutputStream.write(Socket.java:1031) ~[?:?]
+	at java.base/java.io.DataOutputStream.writeByte(DataOutputStream.java:158) ~[?:?]
+	at org.duynguyen.atttclient@1.0-SNAPSHOT/org.duynguyen.atttclient.network.Session.doSendMessage(Session.java:142) ~[classes/:?]
+	at org.duynguyen.atttclient@1.0-SNAPSHOT/org.duynguyen.atttclient.network.Session.doConnect(Session.java:96) ~[classes/:?]
+	at org.duynguyen.atttclient@1.0-SNAPSHOT/org.duynguyen.atttclient.network.Session.networkInit(Session.java:75) ~[classes/:?]
+	at java.base/java.lang.Thread.run(Thread.java:840) [?:?]
+[2025-03-29 13:27:13 ERROR (Thread-8)] - java.lang.NullPointerException: Cannot invoke "org.duynguyen.atttclient.network.IMessageHandler.onConnectOK()" because "this.controller" is null
+[2025-03-29 13:27:23 ERROR (pool-2-thread-1)] - Connection attempt 4 failed: Could not connect to server
+[2025-03-29 14:52:37 ERROR (JavaFX Application Thread)] - Connection attempt 1 failed: Could not connect to server
+[2025-03-29 14:52:40 ERROR (pool-2-thread-1)] - Connection attempt 2 failed: Could not connect to server
+[2025-03-29 14:52:45 ERROR (pool-2-thread-1)] - Connection attempt 3 failed: Could not connect to server
+[2025-03-29 14:52:55 ERROR (pool-2-thread-1)] - Connection attempt 4 failed: Could not connect to server
+[2025-03-29 14:52:55 ERROR (Thread-11)] - doSendMessage err
+java.net.SocketException: Broken pipe
+	at java.base/sun.nio.ch.NioSocketImpl.implWrite(NioSocketImpl.java:425) ~[?:?]
+	at java.base/sun.nio.ch.NioSocketImpl.write(NioSocketImpl.java:445) ~[?:?]
+	at java.base/sun.nio.ch.NioSocketImpl$2.write(NioSocketImpl.java:831) ~[?:?]
+	at java.base/java.net.Socket$SocketOutputStream.write(Socket.java:1035) ~[?:?]
+	at java.base/java.net.Socket$SocketOutputStream.write(Socket.java:1031) ~[?:?]
+	at java.base/java.io.DataOutputStream.writeByte(DataOutputStream.java:158) ~[?:?]
+	at org.duynguyen.atttclient@1.0-SNAPSHOT/org.duynguyen.atttclient.network.Session.doSendMessage(Session.java:142) ~[classes/:?]
+	at org.duynguyen.atttclient@1.0-SNAPSHOT/org.duynguyen.atttclient.network.Session.doConnect(Session.java:97) ~[classes/:?]
+	at org.duynguyen.atttclient@1.0-SNAPSHOT/org.duynguyen.atttclient.network.Session.networkInit(Session.java:75) ~[classes/:?]
+	at java.base/java.lang.Thread.run(Thread.java:840) [?:?]
+[2025-03-29 15:01:04 ERROR (JavaFX Application Thread)] - Failed to connect to server
+[2025-03-29 15:01:32 ERROR (Thread-2)] - java.net.ConnectException: Connection refused
+[2025-03-29 15:01:32 ERROR (JavaFX Application Thread)] - Failed to connect to server
+[2025-03-29 15:04:28 ERROR (Thread-2)] - java.net.ConnectException: Connection refused
+[2025-03-29 15:04:33 ERROR (JavaFX Application Thread)] - Connection attempt 1 failed: Connection timed out
+[2025-03-29 15:04:36 ERROR (Thread-3)] - java.net.ConnectException: Connection refused
+[2025-03-29 15:04:41 ERROR (pool-2-thread-1)] - Connection attempt 2 failed: Connection timed out
+[2025-03-29 15:04:46 ERROR (Thread-4)] - java.net.ConnectException: Connection refused
+[2025-03-29 15:04:51 ERROR (pool-2-thread-1)] - Connection attempt 3 failed: Connection timed out
+[2025-03-29 15:10:50 ERROR (Thread-2)] - java.net.ConnectException: Connection refused
+[2025-03-29 15:10:54 ERROR (JavaFX Application Thread)] - Connection attempt 1 failed: Connection timed out
+[2025-03-29 15:10:57 ERROR (Thread-4)] - java.net.ConnectException: Connection refused
+[2025-03-29 15:11:02 ERROR (pool-2-thread-1)] - Connection attempt 2 failed: Connection timed out
+[2025-03-29 15:11:07 ERROR (Thread-6)] - java.net.ConnectException: Connection refused
+[2025-03-29 15:11:12 ERROR (pool-2-thread-1)] - Connection attempt 3 failed: Connection timed out

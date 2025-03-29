@@ -1,6 +1,10 @@
 package org.duynguyen.atttclient.utils;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.*;
 
 public class DesUtils {
     private static final int BLOCK_SIZE = 8;
@@ -121,69 +125,110 @@ public class DesUtils {
 
 
     public static void encrypt(InputStream input, OutputStream output, byte[] key) throws IOException {
-        processStream(input, output, key, true);
+        processStreamParallel(input, output, key, true);
     }
 
     public static void decrypt(InputStream input, OutputStream output, byte[] key) throws IOException {
-        processStream(input, output, key, false);
+        processStreamParallel(input, output, key, false);
     }
 
-
-    private static void processStream(InputStream input, OutputStream output, byte[] key, boolean encrypt) throws IOException {
-
+    private static void processStreamParallel(InputStream input, OutputStream output, byte[] key, boolean encrypt) throws IOException {
+        int numThreads = Math.max(2, Runtime.getRuntime().availableProcessors() - 1);
+        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
         long[] subKeys = generateSubKeys(key);
-
-
         if (!encrypt) {
             reverseSubKeys(subKeys);
         }
 
-        byte[] buffer = new byte[BLOCK_SIZE];
-        byte[] outputBlock = new byte[BLOCK_SIZE];
-        int bytesRead;
+        try {
+            int bufferSize = BLOCK_SIZE * 1024;
+            byte[] dataBuffer = new byte[bufferSize];
+            ByteArrayOutputStream resultBuffer = new ByteArrayOutputStream();
 
-        while ((bytesRead = input.read(buffer)) > 0) {
-
-            if (bytesRead < BLOCK_SIZE) {
-
-                byte padValue = (byte) (BLOCK_SIZE - bytesRead);
-                for (int i = bytesRead; i < BLOCK_SIZE; i++) {
-                    buffer[i] = padValue;
-                }
+            int bytesRead;
+            while ((bytesRead = input.read(dataBuffer)) > 0) {
+                byte[] chunk = Arrays.copyOf(dataBuffer, bytesRead);
+                byte[] result = processChunkParallel(chunk, subKeys, encrypt, executor);
+                output.write(result);
             }
 
-
-            processBlock(buffer, outputBlock, subKeys);
-
-
-            output.write(outputBlock);
+            if (encrypt && bytesRead % BLOCK_SIZE != 0) {
+                byte padValue = (byte) (BLOCK_SIZE - (bytesRead % BLOCK_SIZE));
+                byte[] padding = new byte[padValue];
+                Arrays.fill(padding, padValue);
+                byte[] result = processChunkParallel(padding, subKeys, true, executor);
+                output.write(result);
+            }
+        } finally {
+            executor.shutdown();
+            try {
+                executor.awaitTermination(1, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
+    }
+
+    private static byte[] processChunkParallel(byte[] data, long[] subKeys, boolean encrypt, ExecutorService executor) throws IOException {
+        int numBlocks = data.length / BLOCK_SIZE;
+        if (data.length % BLOCK_SIZE != 0) {
+            numBlocks++;
+        }
+
+        byte[] paddedData;
+        if (data.length % BLOCK_SIZE == 0) {
+            paddedData = data;
+        } else {
+            paddedData = new byte[numBlocks * BLOCK_SIZE];
+            System.arraycopy(data, 0, paddedData, 0, data.length);
+            byte padValue = (byte) (paddedData.length - data.length);
+            for (int i = data.length; i < paddedData.length; i++) {
+                paddedData[i] = padValue;
+            }
+        }
+        byte[] result = new byte[numBlocks * BLOCK_SIZE];
+        List<Future<BlockResult>> futures = new ArrayList<>();
+        for (int i = 0; i < numBlocks; i++) {
+            final int blockIndex = i;
+            futures.add(executor.submit(() -> {
+                int offset = blockIndex * BLOCK_SIZE;
+                byte[] inputBlock = new byte[BLOCK_SIZE];
+                byte[] outputBlock = new byte[BLOCK_SIZE];
+
+                System.arraycopy(paddedData, offset, inputBlock, 0, BLOCK_SIZE);
+                processBlock(inputBlock, outputBlock, subKeys);
+
+                return new BlockResult(blockIndex, outputBlock);
+            }));
+        }
+
+        try {
+            for (Future<BlockResult> future : futures) {
+                BlockResult blockResult = future.get();
+                System.arraycopy(blockResult.data, 0, result, blockResult.index * BLOCK_SIZE, BLOCK_SIZE);
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            throw new IOException("Error processing blocks in parallel", e);
+        }
+        return result;
+    }
+
+    private record BlockResult(int index, byte[] data) {
     }
 
 
     private static void processBlock(byte[] input, byte[] output, long[] subKeys) {
-
         long block = bytesToLong(input);
-
-
         block = permute(block, IP, 64);
-
-
         int left = (int) (block >> 32);
         int right = (int) (block & 0xFFFFFFFFL);
-
-
         for (int i = 0; i < 16; i++) {
             int temp = left;
             left = right;
             right = temp ^ feistel(right, subKeys[i]);
         }
-
-
         block = ((long) right << 32) | (left & 0xFFFFFFFFL);
         block = permute(block, FP, 64);
-
-
         longToBytes(block, output);
     }
 
@@ -275,18 +320,14 @@ public class DesUtils {
 
         byte padValue = data[data.length - 1];
         if (padValue <= 0 || padValue > BLOCK_SIZE) {
-
             return data;
         }
 
-
         for (int i = data.length - padValue; i < data.length; i++) {
             if (data[i] != padValue) {
-
                 return data;
             }
         }
-
 
         byte[] result = new byte[data.length - padValue];
         System.arraycopy(data, 0, result, 0, result.length);

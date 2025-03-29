@@ -7,34 +7,33 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ConnectionAlert {
+    private static final AtomicBoolean isShowing = new AtomicBoolean(false);
     private static Alert alert;
     private static ProgressIndicator progressIndicator;
     private static Label statusLabel;
-    private static final AtomicBoolean isShowing = new AtomicBoolean(false);
+    private static Timer countdownTimer;
 
-    public static void showConnecting(String host, int port) {
-        if (isShowing.compareAndSet(false, true)) {
-            createAlert("Connecting to Server", "Attempting to connect to " + host + ":" + port);
-            updateStatus("Connecting...", true);
-            alert.show();
-        } else {
-            updateStatus("Connecting...", true);
-        }
-    }
-
-    public static void showRetrying(String host, int port, int attempt, int maxAttempts, int delay) {
-        updateStatus("Connection failed. Retrying in " + delay + " seconds... (Attempt " + attempt + "/" + maxAttempts + ")", true);
+    public static void showRetrying(int attempt, int maxAttempts, int delay) {
+        stopCountdown();
+        startCountdown(delay, (remainingSeconds) -> {
+            updateStatus("Connection failed. Retrying in " + remainingSeconds + " seconds... (Attempt " + attempt + "/" + maxAttempts + ")", true);
+        });
     }
 
     public static void showSuccess() {
+        stopCountdown();
         updateStatus("Connected successfully!", false);
         closeAfterDelay(1500);
     }
 
-    public static void showFailed(String host, int port, Runnable retryAction) {
+    public static void showFailed(Runnable retryAction) {
+        stopCountdown();
         Platform.runLater(() -> {
             statusLabel.setText("Failed to connect after multiple attempts");
             progressIndicator.setVisible(false);
@@ -45,7 +44,6 @@ public class ConnectionAlert {
                 isShowing.set(false);
                 retryAction.run();
             });
-
             HBox buttonBox = new HBox(10, retryButton);
             buttonBox.setAlignment(Pos.CENTER);
 
@@ -54,10 +52,10 @@ public class ConnectionAlert {
         });
     }
 
-    private static void createAlert(String title, String headerText) {
+    private static void createAlert(String headerText) {
         Platform.runLater(() -> {
             alert = new Alert(Alert.AlertType.NONE);
-            alert.setTitle(title);
+            alert.setTitle("Connecting to Server");
             alert.setHeaderText(headerText);
             alert.initModality(Modality.APPLICATION_MODAL);
 
@@ -65,23 +63,33 @@ public class ConnectionAlert {
             progressIndicator.setPrefSize(30, 30);
 
             statusLabel = new Label("Initializing connection...");
-
             VBox content = new VBox(15);
             content.setAlignment(Pos.CENTER);
             content.getChildren().addAll(progressIndicator, statusLabel);
             content.setPrefWidth(350);
             content.setPrefHeight(120);
-
             alert.getDialogPane().setContent(content);
-
-            
             ButtonType closeButton = new ButtonType("Close", ButtonBar.ButtonData.CANCEL_CLOSE);
             alert.getButtonTypes().add(closeButton);
             Button cancelButton = (Button) alert.getDialogPane().lookupButton(closeButton);
             cancelButton.setVisible(false);
 
-            alert.setOnCloseRequest(event -> isShowing.set(false));
+            alert.setOnCloseRequest(event -> {
+                isShowing.set(false);
+                stopCountdown();
+            });
+            alert.show();
         });
+    }
+
+    public static void showConnecting(String host, int port) {
+        stopCountdown();
+        if (isShowing.compareAndSet(false, true)) {
+            createAlert("Attempting to connect to " + host + ":" + port);
+            updateStatus("Connecting...", true);
+        } else {
+            updateStatus("Connecting...", true);
+        }
     }
 
     private static void updateStatus(String status, boolean showProgress) {
@@ -105,7 +113,38 @@ public class ConnectionAlert {
                         isShowing.set(false);
                     }
                 });
-            } catch (InterruptedException ignored) {}
+            } catch (InterruptedException ignored) {
+            }
         }).start();
+    }
+
+    private static void startCountdown(int totalSeconds, CountdownCallback callback) {
+        stopCountdown();
+
+        countdownTimer = new Timer(true);
+        AtomicInteger secondsRemaining = new AtomicInteger(totalSeconds);
+
+        countdownTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                int remaining = secondsRemaining.decrementAndGet();
+                callback.onTick(remaining);
+
+                if (remaining <= 0) {
+                    stopCountdown();
+                }
+            }
+        }, 0, 1000);
+    }
+
+    private static void stopCountdown() {
+        if (countdownTimer != null) {
+            countdownTimer.cancel();
+            countdownTimer = null;
+        }
+    }
+
+    private interface CountdownCallback {
+        void onTick(int secondsRemaining);
     }
 }

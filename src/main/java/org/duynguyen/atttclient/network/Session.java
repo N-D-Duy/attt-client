@@ -52,26 +52,25 @@ public class Session implements ISession {
 
     public static Session getInstance() {
         if(instance == null) {
-            instance = new Session("20.243.124.24", 1609);
+            instance = new Session("localhost", 1690);
         }
         return instance;
     }
-    public boolean connect() {
-        if(!connected && !connecting){
+
+    public void connect() {
+        if (!connecting) {
             getKeyCompleted = false;
             sc = null;
+            connecting = true;
             initThread = new Thread(this::networkInit);
             initThread.start();
         }
-        return connected;
     }
 
-    public void networkInit(){
+    public void networkInit() {
         connecting = true;
-        connected = true;
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-
-        try{
+        try {
             doConnect();
             controller.onConnectOK();
         } catch (Exception e) {
@@ -91,6 +90,7 @@ public class Session implements ISession {
         collectorThread.start();
         sendThread = new Thread(sender);
         sendThread.start();
+
         connected = true;
         connecting = false;
         doSendMessage(new Message(CMD.GET_SESSION_ID));

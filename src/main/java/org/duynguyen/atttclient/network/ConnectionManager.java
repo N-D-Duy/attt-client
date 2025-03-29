@@ -29,7 +29,6 @@ public class ConnectionManager {
 
     public CompletableFuture<Session> connect() {
         CompletableFuture<Session> future = new CompletableFuture<>();
-
         if (isConnecting.compareAndSet(false, true)) {
             retryCount.set(0);
             Platform.runLater(() -> ConnectionAlert.showConnecting(host, port));
@@ -44,19 +43,28 @@ public class ConnectionManager {
     private void doConnect(CompletableFuture<Session> future) {
         try {
             session = new Session(host, port);
-            boolean connected = session.connect();
+            session.connect();
 
-            if (connected) {
-                
-                Platform.runLater(ConnectionAlert::showSuccess);
-                isConnecting.set(false);
-                future.complete(session);
-            } else {
-                
-                handleConnectionFailure(future, "Could not connect to server");
+            long startTime = System.currentTimeMillis();
+            long timeout = 5000;
+
+            while (System.currentTimeMillis() - startTime < timeout) {
+                if (session.isConnected()) {
+                    Platform.runLater(ConnectionAlert::showSuccess);
+                    isConnecting.set(false);
+                    future.complete(session);
+                    return;
+                }
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
             }
+
+            handleConnectionFailure(future, "Connection timed out");
         } catch (Exception e) {
-            
             handleConnectionFailure(future, e.getMessage());
         }
     }
@@ -67,13 +75,13 @@ public class ConnectionManager {
 
         if (currentRetry < MAX_RETRIES) {
             int delaySeconds = RETRY_DELAYS[Math.min(currentRetry - 1, RETRY_DELAYS.length - 1)];
-            Platform.runLater(() -> ConnectionAlert.showRetrying(host, port, currentRetry, MAX_RETRIES, delaySeconds));
+            Platform.runLater(() -> ConnectionAlert.showRetrying(currentRetry, MAX_RETRIES, delaySeconds));
 
             
             scheduler.schedule(() -> doConnect(future), delaySeconds, TimeUnit.SECONDS);
         } else {
             
-            Platform.runLater(() -> ConnectionAlert.showFailed(host, port, () -> {
+            Platform.runLater(() -> ConnectionAlert.showFailed(() -> {
                 retryCount.set(0);
                 doConnect(future);
             }));
