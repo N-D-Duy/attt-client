@@ -6,7 +6,6 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import lombok.Setter;
 import org.duynguyen.atttclient.models.User;
-import org.duynguyen.atttclient.presentation.FileSelectionController;
 import org.duynguyen.atttclient.presentation.MainController;
 import org.duynguyen.atttclient.presentation.StartupController;
 import org.duynguyen.atttclient.presentation.widgets.FileTransferAlert;
@@ -223,18 +222,19 @@ public class Controller implements IMessageHandler {
                         service.handleFileTransferEnd();
                         break;
                     case CMD.CHUNK_ERROR:
-                        try(DataInputStream _dis = ms.reader()) {
+                        try (DataInputStream _dis = ms.reader()) {
                             String transferId = _dis.readUTF();
                             Log.error("Chunk error");
                             Shared.removeFileTransferSession(transferId);
                         }
                         break;
                     case CMD.FILE_TRANSFER_CANCEL:
-                        try(DataInputStream _dis = ms.reader()) {
+                        try (DataInputStream _dis = ms.reader()) {
                             String transferId = _dis.readUTF();
                             FileTransfer.instance.cancel();
                             //show alert file transfer canceled
-                            Platform.runLater(() -> {;
+                            Platform.runLater(() -> {
+                                ;
                                 showTransferCanceledDialog();
                             });
                             Shared.removeFileTransferSession(transferId);
