@@ -8,6 +8,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
 
 import lombok.Setter;
 import org.duynguyen.atttclient.listeners.SaveCredentialsListener;
@@ -62,14 +63,12 @@ public class Session implements ISession {
             getKeyCompleted = false;
             sc = null;
             connecting = true;
-            initThread = new Thread(this::networkInit);
-            initThread.start();
+            CompletableFuture.runAsync(this::networkInit);
         }
     }
 
     public void networkInit() {
         connecting = true;
-        Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
         try {
             doConnect();
             controller.onConnectOK();
@@ -81,6 +80,8 @@ public class Session implements ISession {
     }
 
     public void doConnect() throws IOException {
+        connected = true;
+        connecting = false;
         sc = new Socket(host, port);
         sc.setTcpNoDelay(true);
         dos = new DataOutputStream(sc.getOutputStream());
@@ -91,11 +92,8 @@ public class Session implements ISession {
         sendThread = new Thread(sender);
         sendThread.start();
 
-        connected = true;
-        connecting = false;
         doSendMessage(new Message(CMD.GET_SESSION_ID));
     }
-
 
     @Override
     public boolean isConnected() {

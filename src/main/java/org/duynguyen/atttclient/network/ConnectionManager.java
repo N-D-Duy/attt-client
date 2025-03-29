@@ -32,7 +32,7 @@ public class ConnectionManager {
         if (isConnecting.compareAndSet(false, true)) {
             retryCount.set(0);
             Platform.runLater(() -> ConnectionAlert.showConnecting(host, port));
-            doConnect(future);
+            CompletableFuture.runAsync(() -> doConnect(future));
         } else {
             future.completeExceptionally(new IllegalStateException("Connection attempt already in progress"));
         }
@@ -45,22 +45,14 @@ public class ConnectionManager {
             session = new Session(host, port);
             session.connect();
 
-            long startTime = System.currentTimeMillis();
-            long timeout = 5000;
-
-            while (System.currentTimeMillis() - startTime < timeout) {
+            for (int i = 0; i < 50; i++) {
                 if (session.isConnected()) {
                     Platform.runLater(ConnectionAlert::showSuccess);
                     isConnecting.set(false);
                     future.complete(session);
                     return;
                 }
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
+                Thread.sleep(100);
             }
 
             handleConnectionFailure(future, "Connection timed out");
@@ -77,12 +69,15 @@ public class ConnectionManager {
             int delaySeconds = RETRY_DELAYS[Math.min(currentRetry - 1, RETRY_DELAYS.length - 1)];
             Platform.runLater(() -> ConnectionAlert.showRetrying(currentRetry, MAX_RETRIES, delaySeconds));
 
-            
-            scheduler.schedule(() -> doConnect(future), delaySeconds, TimeUnit.SECONDS);
+            scheduler.schedule(
+                    () -> CompletableFuture.runAsync(() -> doConnect(future)),
+                    delaySeconds,
+                    TimeUnit.SECONDS
+            );
         } else {
             Platform.runLater(() -> ConnectionAlert.showFailed(() -> {
                 retryCount.set(0);
-                doConnect(future);
+                CompletableFuture.runAsync(() -> doConnect(future));
             }));
             isConnecting.set(false);
             future.completeExceptionally(new Exception("Failed to connect after " + MAX_RETRIES + " attempts"));
