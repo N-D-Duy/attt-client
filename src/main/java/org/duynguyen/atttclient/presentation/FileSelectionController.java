@@ -75,6 +75,11 @@ public class FileSelectionController implements FileTransfer.TransferCompleteLis
         javafx.application.Platform.runLater(() -> {
             fileInfoLabel.setText("Gửi file thất bại: " + reason);
             btnSendFile.setDisable(false);
+            Stage stage = (Stage) fileInfoLabel.getScene().getWindow();
+            stage.close();
+            if(mainController != null) {
+                mainController.showMainScreen();
+            }
         });
     }
 

@@ -105,3 +105,9 @@ java.net.SocketException: Broken pipe
 [2025-03-29 15:11:02 ERROR (pool-2-thread-1)] - Connection attempt 2 failed: Connection timed out
 [2025-03-29 15:11:07 ERROR (Thread-6)] - java.net.ConnectException: Connection refused
 [2025-03-29 15:11:12 ERROR (pool-2-thread-1)] - Connection attempt 3 failed: Connection timed out
+[2025-03-29 16:57:41 ERROR (Thread-2)] - message not auth: Not on FX application thread; currentThread = Thread-2
+[2025-03-29 17:01:23 ERROR (Thread-2)] - message not auth: Not on FX application thread; currentThread = Thread-2
+[2025-03-29 17:07:20 ERROR (Thread-2)] - message not auth: Not on FX application thread; currentThread = Thread-2
+[2025-03-29 17:17:12 ERROR (Thread-2)] - message not auth: Not on FX application thread; currentThread = Thread-2
+[2025-03-29 17:22:44 ERROR (ForkJoinPool.commonPool-worker-2)] - java.net.ConnectException: Connection refused
+[2025-03-29 17:23:45 ERROR (Thread-2)] - message not auth: Not on FX application thread; currentThread = Thread-2

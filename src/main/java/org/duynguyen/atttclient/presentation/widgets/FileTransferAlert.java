@@ -5,6 +5,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.stage.Modality;
+import org.duynguyen.atttclient.network.Session;
 import org.duynguyen.atttclient.protocol.FileTransfer;
 import org.duynguyen.atttclient.utils.Log;
 
@@ -17,9 +18,19 @@ public class FileTransferAlert {
     private static Label statusLabel;
     private static Label progressLabel;
     private static FileTransfer currentTransfer;
-    private static final AtomicBoolean isShowing = new AtomicBoolean(false);
+    public static final AtomicBoolean isShowing = new AtomicBoolean(false);
     private static Thread updateThread;
     private static final DecimalFormat df = new DecimalFormat("0.0");
+
+    public static void hide() {
+        if (alert != null) {
+            alert.close();
+            isShowing.set(false);
+            if (updateThread != null) {
+                updateThread.interrupt();
+            }
+        }
+    }
 
     public static void show(FileTransfer transfer) {
         if (isShowing.compareAndSet(false, true)) {
@@ -29,10 +40,15 @@ public class FileTransferAlert {
                 createAlert();
                 startUpdateThread();
 
-                alert.showAndWait().ifPresent(result -> {
-                    if (result == ButtonType.CANCEL) {
-                        // Handle cancel
-                        Log.info("Transfer canceled by user");
+                alert.show();
+
+                alert.setOnCloseRequest(event -> {
+                    ButtonType result = alert.getResult();
+                    if (result != null && result.getButtonData() == ButtonBar.ButtonData.CANCEL_CLOSE) {
+                        Session session = Session.getInstance();
+                        if(session != null && session.getService() != null) {
+                            session.getService().cancelFileTransfer(currentTransfer.getTransferId());
+                        }
                     }
                     isShowing.set(false);
                     if (updateThread != null) {

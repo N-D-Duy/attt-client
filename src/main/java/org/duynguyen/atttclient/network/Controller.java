@@ -6,6 +6,7 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import lombok.Setter;
 import org.duynguyen.atttclient.models.User;
+import org.duynguyen.atttclient.presentation.FileSelectionController;
 import org.duynguyen.atttclient.presentation.MainController;
 import org.duynguyen.atttclient.presentation.StartupController;
 import org.duynguyen.atttclient.presentation.widgets.FileTransferAlert;
@@ -231,7 +232,10 @@ public class Controller implements IMessageHandler {
                     case CMD.FILE_TRANSFER_CANCEL:
                         try(DataInputStream _dis = ms.reader()) {
                             String transferId = _dis.readUTF();
-                            Log.info("File transfer cancel");
+//                            if(FileTransferAlert.isShowing.get()) {
+//                                FileTransferAlert.hide();
+//                            }
+                            FileTransfer.instance.cancel();
                             Shared.removeFileTransferSession(transferId);
                         }
                         break;

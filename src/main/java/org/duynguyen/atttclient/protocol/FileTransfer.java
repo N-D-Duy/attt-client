@@ -221,4 +221,24 @@ public class FileTransfer {
             }
         }
     }
+
+    public void cancel() {
+        try {
+            if (fileInputStream != null) {
+                fileInputStream.close();
+            }
+            if (fileOutputStream != null) {
+                fileOutputStream.close();
+            }
+            if (encryptedFile != null && encryptedFile.exists()) {
+                encryptedFile.delete();
+            }
+            state = FileTransferState.FAILED;
+            if (listener != null) {
+                listener.onTransferFailed("Truyền file đã bị hủy");
+            }
+        } catch (IOException e) {
+            Log.error("Lỗi khi hủy truyền file: " + e.getMessage());
+        }
+    }
 }
