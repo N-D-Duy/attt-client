@@ -111,3 +111,4 @@ java.net.SocketException: Broken pipe
 [2025-03-29 17:17:12 ERROR (Thread-2)] - message not auth: Not on FX application thread; currentThread = Thread-2
 [2025-03-29 17:22:44 ERROR (ForkJoinPool.commonPool-worker-2)] - java.net.ConnectException: Connection refused
 [2025-03-29 17:23:45 ERROR (Thread-2)] - message not auth: Not on FX application thread; currentThread = Thread-2
+[2025-03-29 21:00:16 ERROR (ForkJoinPool.commonPool-worker-2)] - java.net.ConnectException: Connection refused

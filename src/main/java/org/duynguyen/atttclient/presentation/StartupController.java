@@ -28,57 +28,12 @@ public class StartupController {
     private static final String CONFIG_FILE = "config.properties";
     @FXML
     private ProgressBar progressBar;
-    private Properties userConfig;
-    private final Session session = Session.getInstance();
     @Getter
     public static StartupController instance;
     @FXML
     public void initialize() {
-        userConfig = loadConfig();
-        Platform.runLater(this::processLogin);
+        Platform.runLater(this::navigateToLoginScreen);
         instance = this;
-    }
-
-    private void processLogin(){
-        boolean hasCredentials = Boolean.parseBoolean(userConfig.getProperty("rememberMe", "false")) &&
-                !userConfig.getProperty("savedUsername", "").isEmpty();
-
-        if (hasCredentials) {
-            String username = userConfig.getProperty("savedUsername", "");
-            String password = userConfig.getProperty("savedPassword", "");
-
-            session.getService().login(username, password);
-        } else {
-            navigateToLoginScreen();
-        }
-    }
-
-    private Properties loadConfig() {
-        Properties props = new Properties();
-        File configFile = new File(CONFIG_FILE);
-
-        if (!configFile.exists()) {
-            props.setProperty("savedUsername", "");
-            props.setProperty("savedPassword", "");
-            props.setProperty("rememberMe", "false");
-            saveConfig(props);
-        } else {
-            try (FileInputStream fis = new FileInputStream(configFile)) {
-                props.load(fis);
-            } catch (IOException e) {
-                Log.error("Error loading config: " + e.getMessage());
-            }
-        }
-
-        return props;
-    }
-
-    private void saveConfig(Properties props) {
-        try (FileOutputStream fos = new FileOutputStream(CONFIG_FILE)) {
-            props.store(fos, "User Configuration");
-        } catch (IOException e) {
-            Log.error("Error saving config: " + e.getMessage());
-        }
     }
 
 
@@ -92,6 +47,7 @@ public class StartupController {
             Log.error("Failed to navigate to main screen: " + e.getMessage());
         }
     }
+
     private void switchToMainScreen(List<User> users) throws IOException {
         FXMLLoader loader = new FXMLLoader(HelloApplication.class.getResource("main.fxml"));
         Parent root = loader.load();
@@ -104,13 +60,6 @@ public class StartupController {
         stage.setScene(scene);
         stage.setTitle("Secure File Transfer");
         stage.show();
-    }
-    public void onLoginFailed(){
-        Platform.runLater(this::navigateToLoginScreen);
-    }
-
-    public void onLoginError(){
-        Platform.runLater(this::navigateToLoginScreen);
     }
 
     private void navigateToLoginScreen() {

@@ -232,10 +232,11 @@ public class Controller implements IMessageHandler {
                     case CMD.FILE_TRANSFER_CANCEL:
                         try(DataInputStream _dis = ms.reader()) {
                             String transferId = _dis.readUTF();
-//                            if(FileTransferAlert.isShowing.get()) {
-//                                FileTransferAlert.hide();
-//                            }
                             FileTransfer.instance.cancel();
+                            //show alert file transfer canceled
+                            Platform.runLater(() -> {;
+                                showTransferCanceledDialog();
+                            });
                             Shared.removeFileTransferSession(transferId);
                         }
                         break;
@@ -284,6 +285,22 @@ public class Controller implements IMessageHandler {
 
         Optional<ButtonType> result = alert.showAndWait();
         sendHandshakeResponse(senderId, result.isPresent() && result.get() == acceptButton);
+    }
+
+    private void showTransferCanceledDialog() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("File Transfer");
+        alert.setHeaderText(null);
+        alert.setContentText("File transfer has been canceled.");
+        new Thread(() -> {
+            try {
+                Thread.sleep(1000);
+                Platform.runLater(alert::close);
+            } catch (InterruptedException e) {
+                Log.error("Error closing alert: " + e.getMessage());
+            }
+        }).start();
+
     }
 
     private void sendHandshakeResponse(int senderId, boolean accept) {

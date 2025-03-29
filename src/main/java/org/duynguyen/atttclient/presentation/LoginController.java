@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -33,7 +34,38 @@ public class LoginController {
     @FXML
     public void initialize() {
         loadSavedCredentials();
+        if (rememberMeCheckbox.isSelected() &&
+                !usernameField.getText().isEmpty() &&
+                !passwordField.getText().isEmpty()) {
+
+            Alert autoLoginAlert = getAlert();
+            new Thread(() -> {
+                try {
+                    Thread.sleep(1000);
+                    Platform.runLater(() -> {
+                        autoLoginAlert.close();
+                        onLoginButtonClick();
+                    });
+                } catch (InterruptedException e) {
+                    Log.error("Auto login interrupted: " + e.getMessage());
+                }
+            }).start();
+        }
     }
+
+    private static Alert getAlert() {
+        Alert autoLoginAlert = new Alert(Alert.AlertType.INFORMATION);
+        autoLoginAlert.setTitle("Auto Login");
+        autoLoginAlert.setHeaderText(null);
+        autoLoginAlert.setContentText("Logging in automatically...");
+        autoLoginAlert.setGraphic(new javafx.scene.control.ProgressIndicator());
+        Stage stage = (Stage) HelloApplication.primaryStage.getScene().getWindow();
+        autoLoginAlert.initOwner(stage);
+
+        autoLoginAlert.show();
+        return autoLoginAlert;
+    }
+
 
     @FXML
     private void onLoginButtonClick() {
