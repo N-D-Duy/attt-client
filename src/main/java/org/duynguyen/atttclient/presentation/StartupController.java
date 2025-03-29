@@ -36,7 +36,6 @@ public class StartupController {
         instance = this;
     }
 
-
     public void onLoginSuccess(List<User> users){
         Platform.runLater(()->navigateToMainScreen(users));
     }

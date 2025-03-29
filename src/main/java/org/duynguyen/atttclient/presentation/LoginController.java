@@ -37,7 +37,6 @@ public class LoginController {
         if (rememberMeCheckbox.isSelected() &&
                 !usernameField.getText().isEmpty() &&
                 !passwordField.getText().isEmpty()) {
-
             Alert autoLoginAlert = getAlert();
             new Thread(() -> {
                 try {

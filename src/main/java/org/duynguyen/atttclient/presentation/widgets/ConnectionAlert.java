@@ -28,12 +28,8 @@ public class ConnectionAlert {
 
     public static void showSuccess() {
         stopCountdown();
-        Platform.runLater(() -> {
-            if (alert != null && isShowing.get()) {
-                alert.close();
-                isShowing.set(false);
-            }
-        });
+        updateStatus("Connected successfully!", false);
+        closeAfterDelay(1000);
     }
 
     public static void showFailed(Runnable retryAction) {

@@ -35,7 +35,7 @@ public class HelloApplication extends Application {
   }
 
   public static void main(String[] args) {
-    connectionManager = new ConnectionManager("localhost", 1690);
+    connectionManager = new ConnectionManager("20.243.124.24", 1690);
     launch();
   }
 
