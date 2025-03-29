@@ -123,16 +123,28 @@ public class DesUtils {
             }
     };
 
-
-    public static void encrypt(InputStream input, OutputStream output, byte[] key) throws IOException {
-        processStreamParallel(input, output, key, true);
+    public interface ProgressCallback {
+        void onProgress(double progress);
     }
 
-    public static void decrypt(InputStream input, OutputStream output, byte[] key) throws IOException {
-        processStreamParallel(input, output, key, false);
+    public static void encrypt(InputStream input, OutputStream output, byte[] key, ProgressCallback progressCallback) throws IOException {
+        processStreamParallel(input, output, key, true, progressCallback);
     }
 
-    private static void processStreamParallel(InputStream input, OutputStream output, byte[] key, boolean encrypt) throws IOException {
+    public static void decrypt(InputStream input, OutputStream output, byte[] key, ProgressCallback progressCallback) throws IOException {
+        processStreamParallel(input, output, key, false, progressCallback);
+    }
+
+    private static void processStreamParallel(InputStream input, OutputStream output, byte[] key, boolean encrypt,
+                                              ProgressCallback progressCallback) throws IOException {
+        long totalSize = -1;
+        if (input instanceof FileInputStream) {
+            try {
+                totalSize = ((FileInputStream) input).getChannel().size();
+            } catch (IOException ignored) {}
+        }
+
+        long processedBytes = 0;
         int numThreads = Math.max(2, Runtime.getRuntime().availableProcessors() - 1);
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
         long[] subKeys = generateSubKeys(key);
@@ -150,6 +162,11 @@ public class DesUtils {
                 byte[] chunk = Arrays.copyOf(dataBuffer, bytesRead);
                 byte[] result = processChunkParallel(chunk, subKeys, encrypt, executor);
                 output.write(result);
+
+                processedBytes += bytesRead;
+                if (progressCallback != null && totalSize > 0) {
+                    progressCallback.onProgress((double) processedBytes / totalSize);
+                }
             }
 
             if (encrypt && bytesRead % BLOCK_SIZE != 0) {
@@ -300,7 +317,7 @@ public class DesUtils {
     public static byte[] encrypt(byte[] data, byte[] key) throws IOException {
         try (ByteArrayInputStream input = new ByteArrayInputStream(data);
              ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            encrypt(input, output, key);
+            encrypt(input, output, key, null);
             return output.toByteArray();
         }
     }
@@ -308,7 +325,7 @@ public class DesUtils {
     public static byte[] decrypt(byte[] data, byte[] key) throws IOException {
         try (ByteArrayInputStream input = new ByteArrayInputStream(data);
              ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            decrypt(input, output, key);
+            decrypt(input, output, key, null);
             return removePadding(output.toByteArray());
         }
     }

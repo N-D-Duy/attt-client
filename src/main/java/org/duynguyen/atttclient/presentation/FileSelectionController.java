@@ -1,25 +1,31 @@
 package org.duynguyen.atttclient.presentation;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Setter;
-import org.duynguyen.atttclient.protocol.FileTransfer;
 import org.duynguyen.atttclient.network.Session;
+import org.duynguyen.atttclient.protocol.FileTransfer;
 import org.duynguyen.atttclient.utils.Log;
 
 import java.io.File;
 
-public class FileSelectionController implements FileTransfer.TransferCompleteListener{
-    @FXML
-    private Label fileInfoLabel;
-
+public class FileSelectionController implements FileTransfer.TransferCompleteListener, FileTransfer.ProgressListener {
     private final Session session = Session.getInstance();
     private final FileTransfer fileTransfer = FileTransfer.instance;
-
+    @FXML
+    private Label fileInfoLabel;
+    @FXML
+    private ProgressBar progressBar;
+    @FXML
+    private Label progressLabel;
+    @FXML
+    private Label timeRemainingLabel;
     @FXML
     private Button btnEncryptFile;
 
@@ -37,9 +43,22 @@ public class FileSelectionController implements FileTransfer.TransferCompleteLis
         btnEncryptFile.setDisable(true);
         btnSendFile.setDisable(true);
 
+
+        progressBar.setVisible(false);
+        progressLabel.setVisible(false);
+        timeRemainingLabel.setVisible(false);
+
         if (fileTransfer != null) {
             fileTransfer.setTransferCompleteListener(this);
+            fileTransfer.setProgressListener(this);
         }
+    }
+
+    @Override
+    public void onProgressUpdate(double progress, String estimatedTime) {
+        progressBar.setProgress(progress);
+        progressLabel.setText(String.format("%.1f%%", progress * 100));
+        timeRemainingLabel.setText("Thời gian còn lại: " + estimatedTime);
     }
 
     @FXML
@@ -53,7 +72,10 @@ public class FileSelectionController implements FileTransfer.TransferCompleteLis
 
     @Override
     public void onTransferComplete() {
-        javafx.application.Platform.runLater(() -> {
+        Platform.runLater(() -> {
+            progressBar.setVisible(false);
+            progressLabel.setVisible(false);
+            timeRemainingLabel.setVisible(false);
             fileInfoLabel.setText("Gửi file thành công!");
             Stage stage = (Stage) fileInfoLabel.getScene().getWindow();
             stage.close();
@@ -72,12 +94,15 @@ public class FileSelectionController implements FileTransfer.TransferCompleteLis
 
     @Override
     public void onTransferFailed(String reason) {
-        javafx.application.Platform.runLater(() -> {
+        Platform.runLater(() -> {
+            progressBar.setVisible(false);
+            progressLabel.setVisible(false);
+            timeRemainingLabel.setVisible(false);
             fileInfoLabel.setText("Gửi file thất bại: " + reason);
             btnSendFile.setDisable(false);
             Stage stage = (Stage) fileInfoLabel.getScene().getWindow();
             stage.close();
-            if(mainController != null) {
+            if (mainController != null) {
                 mainController.showMainScreen();
             }
         });
@@ -101,16 +126,35 @@ public class FileSelectionController implements FileTransfer.TransferCompleteLis
     private void onEncryptFile() {
         if (selectedFile != null) {
             try {
-                fileTransfer.prepareForSending(selectedFile);
-                fileInfoLabel.setText("File: " + selectedFile.getName() + " (Size: " + selectedFile.length() + " bytes)");
-                encryptedFile = fileTransfer.getEncryptedFile();
+                progressBar.setProgress(0);
+                progressBar.setVisible(true);
+                progressLabel.setVisible(true);
+                timeRemainingLabel.setVisible(true);
+                btnEncryptFile.setDisable(true);
+
+                fileInfoLabel.setText("Đang mã hóa file: " + selectedFile.getName());
+
+                new Thread(() -> {
+                    try {
+                        fileTransfer.prepareForSending(selectedFile);
+                        encryptedFile = fileTransfer.getEncryptedFile();
+
+                        Platform.runLater(() -> {
+                            fileInfoLabel.setText("File đã mã hóa: " + selectedFile.getName());
+                            btnSendFile.setDisable(false);
+                        });
+                    } catch (Exception e) {
+                        Log.error(e);
+                        Platform.runLater(() -> {
+                            fileInfoLabel.setText("Lỗi khi mã hóa: " + e.getMessage());
+                            btnEncryptFile.setDisable(false);
+                        });
+                    }
+                }).start();
             } catch (Exception e) {
                 Log.error(e);
-            } finally {
-                btnEncryptFile.setDisable(true);
-                btnSendFile.setDisable(false);
+                fileInfoLabel.setText("Lỗi: " + e.getMessage());
             }
         }
     }
 }
-

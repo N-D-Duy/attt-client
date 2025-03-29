@@ -1,6 +1,8 @@
 package org.duynguyen.atttclient.protocol;
 
+import javafx.application.Platform;
 import lombok.Getter;
+import lombok.Setter;
 import org.duynguyen.atttclient.network.Session;
 import org.duynguyen.atttclient.utils.DesUtils;
 import org.duynguyen.atttclient.utils.Log;
@@ -29,6 +31,14 @@ public class FileTransfer {
     private File sourceFile;
     private File targetFile;
     private File encryptedFile;
+    private long startTime;
+    private String estimatedTimeRemaining = "Calculating...";
+    public interface ProgressListener {
+        void onProgressUpdate(double progress, String estimatedTime);
+    }
+
+    @Setter
+    private ProgressListener progressListener;
 
     public interface TransferCompleteListener {
         void onTransferComplete();
@@ -127,9 +137,16 @@ public class FileTransfer {
             throw new IllegalArgumentException("File không tồn tại!");
         }
         File encryptedFile = new File(file.getParent(), file.getName() + ".des");
+        startTime = System.currentTimeMillis();
+
         try (FileInputStream fis = new FileInputStream(file);
              FileOutputStream fos = new FileOutputStream(encryptedFile)) {
-            DesUtils.encrypt(fis, fos, keyDes);
+            DesUtils.encrypt(fis, fos, keyDes, new DesUtils.ProgressCallback() {
+                @Override
+                public void onProgress(double progress) {
+                    updateProgress(progress);
+                }
+            });
         }
         return encryptedFile;
     }
@@ -137,9 +154,11 @@ public class FileTransfer {
     public void decryptFile() {
         try {
             this.state = FileTransferState.DECRYPTING;
+            startTime = System.currentTimeMillis();
+
             try (FileInputStream fis = new FileInputStream(encryptedFile);
                  FileOutputStream fos = new FileOutputStream(targetFile)) {
-                DesUtils.decrypt(fis, fos, keyDes);
+                DesUtils.decrypt(fis, fos, keyDes, this::updateProgress);
             }
             if (encryptedFile.exists()) {
                 if (encryptedFile.delete()) {
@@ -152,6 +171,37 @@ public class FileTransfer {
         } catch (Exception e) {
             this.state = FileTransferState.FAILED;
             Log.error("Lỗi khi giải mã file: " + e.getMessage());
+        }
+    }
+
+    private void updateProgress(double progress) {
+        if (progress > 0) {
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            long totalEstimatedTime = (long) (elapsedTime / progress);
+            long remainingTime = totalEstimatedTime - elapsedTime;
+
+            estimatedTimeRemaining = formatTime(remainingTime);
+        }
+
+        if (progressListener != null) {
+            Platform.runLater(() ->
+                    progressListener.onProgressUpdate(progress, estimatedTimeRemaining));
+        }
+    }
+
+    private String formatTime(long millis) {
+        if (millis < 1000) {
+            return "< 1 giây";
+        }
+
+        long seconds = millis / 1000;
+        long minutes = seconds / 60;
+        seconds = seconds % 60;
+
+        if (minutes > 0) {
+            return String.format("%d phút %d giây", minutes, seconds);
+        } else {
+            return String.format("%d giây", seconds);
         }
     }
 
