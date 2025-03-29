@@ -232,11 +232,7 @@ public class Controller implements IMessageHandler {
                         try (DataInputStream _dis = ms.reader()) {
                             String transferId = _dis.readUTF();
                             FileTransfer.instance.cancel();
-                            //show alert file transfer canceled
-                            Platform.runLater(() -> {
-                                ;
-                                showTransferCanceledDialog();
-                            });
+                            Platform.runLater(this::showTransferCanceledDialog);
                             Shared.removeFileTransferSession(transferId);
                         }
                         break;
