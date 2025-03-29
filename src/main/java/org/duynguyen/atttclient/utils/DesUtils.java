@@ -155,22 +155,23 @@ public class DesUtils {
         try {
             int bufferSize = BLOCK_SIZE * 1024;
             byte[] dataBuffer = new byte[bufferSize];
-            ByteArrayOutputStream resultBuffer = new ByteArrayOutputStream();
 
+            long originalDataSize = 0;
             int bytesRead;
+
             while ((bytesRead = input.read(dataBuffer)) > 0) {
                 byte[] chunk = Arrays.copyOf(dataBuffer, bytesRead);
                 byte[] result = processChunkParallel(chunk, subKeys, encrypt, executor);
                 output.write(result);
-
                 processedBytes += bytesRead;
+                originalDataSize += bytesRead;
                 if (progressCallback != null && totalSize > 0) {
                     progressCallback.onProgress((double) processedBytes / totalSize);
                 }
             }
 
-            if (encrypt && bytesRead % BLOCK_SIZE != 0) {
-                byte padValue = (byte) (BLOCK_SIZE - (bytesRead % BLOCK_SIZE));
+            if (encrypt && originalDataSize % BLOCK_SIZE != 0) {
+                byte padValue = (byte) (BLOCK_SIZE - (originalDataSize % BLOCK_SIZE));
                 byte[] padding = new byte[padValue];
                 Arrays.fill(padding, padValue);
                 byte[] result = processChunkParallel(padding, subKeys, true, executor);
