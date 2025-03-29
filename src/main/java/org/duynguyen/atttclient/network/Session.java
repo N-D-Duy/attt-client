@@ -213,6 +213,12 @@ public class Session implements ISession {
             // System.gc();
         } catch (IOException e) {
             Log.error("cleanNetwork err", e);
+        } finally{
+            Log.info("Server disconnected. Closing client...");
+            Platform.runLater(() -> {
+                Platform.exit();
+                System.exit(0);
+            });
         }
     }
 

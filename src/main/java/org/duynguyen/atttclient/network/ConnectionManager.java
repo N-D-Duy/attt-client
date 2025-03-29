@@ -80,7 +80,6 @@ public class ConnectionManager {
             
             scheduler.schedule(() -> doConnect(future), delaySeconds, TimeUnit.SECONDS);
         } else {
-            
             Platform.runLater(() -> ConnectionAlert.showFailed(() -> {
                 retryCount.set(0);
                 doConnect(future);
