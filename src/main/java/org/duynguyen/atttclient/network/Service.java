@@ -135,7 +135,7 @@ public record Service(Session session) {
                 sendMessage(msg);
                 msg.cleanup();
             } catch (Exception ex) {
-                Log.error("Lỗi khi gửi chunk file: " + ex.getMessage());
+                Log.error("Error sending file chunk: " + ex.getMessage());
             }
         }
     }
@@ -158,7 +158,7 @@ public record Service(Session session) {
                 sendMessage(msg);
                 msg.cleanup();
             } catch (Exception ex) {
-                Log.error("Lỗi khi gửi xác nhận chunk: " + ex.getMessage());
+                Log.error("Error sending chunk acknowledgment: " + ex.getMessage());
             }
         }
     }
@@ -180,7 +180,7 @@ public record Service(Session session) {
                 sendMessage(msg);
                 msg.cleanup();
             } catch (Exception ex) {
-                Log.error("Lỗi khi gửi kết thúc truyền file: " + ex.getMessage());
+                Log.error("Error sending file transfer end: " + ex.getMessage());
             }
         }
     }
@@ -203,7 +203,7 @@ public record Service(Session session) {
                 sendMessage(msg);
                 msg.cleanup();
             } catch (Exception ex) {
-                Log.error("Lỗi khi gửi hoàn thành truyền file: " + ex.getMessage());
+                Log.error("Error sending file transfer complete: " + ex.getMessage());
             }
         }
     }

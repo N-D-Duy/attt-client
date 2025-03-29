@@ -89,7 +89,7 @@ public class MainController {
         User selectedUser = onlineUsersListView.getSelectionModel().getSelectedItem();
         if (selectedUser != null) {
             disableUI();
-            showWaitingPopup("Đang chờ phản hồi từ " + selectedUser.username() + "...");
+            showWaitingPopup("Waiting for response from " + selectedUser.username() + "...");
 
             session.getService().sendHandShakeRequest(selectedUser.id());
         }
@@ -114,7 +114,7 @@ public class MainController {
             Stage stage = new Stage();
             waitingStage = stage;
             stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Đang chờ...");
+            stage.setTitle("Waiting...");
 
             VBox vbox = new VBox(10);
             vbox.setAlignment(Pos.CENTER);
@@ -142,7 +142,7 @@ public class MainController {
         Platform.runLater(() -> {
             enableUI();
             closeWaitingPopup();
-            showErrorDialog("Handshake thất bại. Vui lòng thử lại sau.");
+            showErrorDialog("Handshake failed. Please try again later.");
         });
     }
 
@@ -165,7 +165,7 @@ public class MainController {
             stage.setTitle("Select File to Send");
             stage.show();
         } catch (IOException e) {
-            Log.error("Không thể mở màn hình chọn file: " + e.getMessage());
+            Log.error("Cannot open file selection screen: " + e.getMessage());
         }
     }
 
@@ -178,11 +178,9 @@ public class MainController {
 
     private void showErrorDialog(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Lỗi");
+        alert.setTitle("Error");
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
     }
 }
-
-

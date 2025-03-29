@@ -103,7 +103,7 @@ public class FileTransfer {
             this.state = FileTransferState.TRANSFERRING;
         } catch (Exception e) {
             this.state = FileTransferState.FAILED;
-            Log.error("Lỗi khi chuẩn bị file để gửi: " + e.getMessage());
+            Log.error("Error preparing file for sending: " + e.getMessage());
         }
     }
 
@@ -115,7 +115,7 @@ public class FileTransfer {
             if (!targetDirectory.exists()) {
                 boolean created = targetDirectory.mkdirs();
                 if (!created) {
-                    Log.error("Không thể tạo thư mục: " + targetDirectory.getAbsolutePath());
+                    Log.error("Cannot create directory: " + targetDirectory.getAbsolutePath());
                     this.state = FileTransferState.FAILED;
                     return;
                 }
@@ -128,13 +128,13 @@ public class FileTransfer {
             this.state = FileTransferState.TRANSFERRING;
         } catch (Exception e) {
             this.state = FileTransferState.FAILED;
-            Log.error("Lỗi khi chuẩn bị nhận file: " + e.getMessage());
+            Log.error("Error preparing to receive file: " + e.getMessage());
         }
     }
 
     public File encryptFile(File file) throws Exception {
         if (file == null || !file.exists()) {
-            throw new IllegalArgumentException("File không tồn tại!");
+            throw new IllegalArgumentException("File does not exist!");
         }
         File encryptedFile = new File(file.getParent(), file.getName() + ".des");
         startTime = System.currentTimeMillis();
@@ -162,15 +162,15 @@ public class FileTransfer {
             }
             if (encryptedFile.exists()) {
                 if (encryptedFile.delete()) {
-                    Log.info("File mã hóa đã được xóa");
+                    Log.info("Encrypted file has been deleted");
                 } else {
-                    Log.error("Không thể xóa file mã hóa");
+                    Log.error("Cannot delete encrypted file");
                 }
             }
             this.state = FileTransferState.COMPLETED;
         } catch (Exception e) {
             this.state = FileTransferState.FAILED;
-            Log.error("Lỗi khi giải mã file: " + e.getMessage());
+            Log.error("Error decrypting file: " + e.getMessage());
         }
     }
 
@@ -191,7 +191,7 @@ public class FileTransfer {
 
     private String formatTime(long millis) {
         if (millis < 1000) {
-            return "< 1 giây";
+            return "< 1 second";
         }
 
         long seconds = millis / 1000;
@@ -199,9 +199,9 @@ public class FileTransfer {
         seconds = seconds % 60;
 
         if (minutes > 0) {
-            return String.format("%d phút %d giây", minutes, seconds);
+            return String.format("%d minutes %d seconds", minutes, seconds);
         } else {
-            return String.format("%d giây", seconds);
+            return String.format("%d seconds", seconds);
         }
     }
 
@@ -224,7 +224,7 @@ public class FileTransfer {
             bytesTransferred += bytesRead;
             return Arrays.copyOf(buffer, bytesRead);
         } catch (IOException e) {
-            Log.error("Lỗi khi đọc chunk file: " + e.getMessage());
+            Log.error("Error reading file chunk: " + e.getMessage());
             state = FileTransferState.FAILED;
             return null;
         }
@@ -243,7 +243,7 @@ public class FileTransfer {
             }
         } catch (IOException e) {
             state = FileTransferState.FAILED;
-            Log.error("Lỗi khi ghi chunk file: " + e.getMessage());
+            Log.error("Error writing file chunk: " + e.getMessage());
         }
     }
 
@@ -265,7 +265,7 @@ public class FileTransfer {
             }
         } catch (IOException e) {
             state = FileTransferState.FAILED;
-            Log.error("Lỗi khi hoàn thành truyền file: " + e.getMessage());
+            Log.error("Error completing file transfer: " + e.getMessage());
             if (listener != null) {
                 listener.onTransferFailed(e.getMessage());
             }
@@ -285,10 +285,10 @@ public class FileTransfer {
             }
             state = FileTransferState.FAILED;
             if (listener != null) {
-                listener.onTransferFailed("Truyền file đã bị hủy");
+                listener.onTransferFailed("File transfer has been canceled");
             }
         } catch (IOException e) {
-            Log.error("Lỗi khi hủy truyền file: " + e.getMessage());
+            Log.error("Error canceling file transfer: " + e.getMessage());
         }
     }
 }
