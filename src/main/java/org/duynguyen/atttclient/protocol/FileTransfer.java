@@ -54,6 +54,8 @@ public class FileTransfer {
 
     private static final int DEFAULT_CHUNK_SIZE = 64 * 1024;
     private final ReentrantLock lock = new ReentrantLock();
+    private static final int MAX_RETRY_COUNT = 3;
+    private int retryCount = 0;
 
     public enum FileTransferState {
         INITIALIZED,
@@ -222,11 +224,18 @@ public class FileTransfer {
                 return null;
             }
             bytesTransferred += bytesRead;
+            retryCount = 0;
             return Arrays.copyOf(buffer, bytesRead);
         } catch (IOException e) {
             Log.error("Error reading file chunk: " + e.getMessage());
-            state = FileTransferState.FAILED;
-            return null;
+            if (++retryCount <= MAX_RETRY_COUNT) {
+                Log.info("Retrying to read chunk... Attempt " + retryCount);
+                return nextChunk();
+            } else {
+                state = FileTransferState.FAILED;
+                Log.error("Max retry attempts reached for reading chunk.");
+                return null;
+            }
         }
     }
 
@@ -237,13 +246,20 @@ public class FileTransfer {
         try {
             fileOutputStream.write(data);
             bytesTransferred += data.length;
+            retryCount = 0;
 
             if (bytesTransferred >= fileSize) {
                 fileOutputStream.close();
             }
         } catch (IOException e) {
-            state = FileTransferState.FAILED;
             Log.error("Error writing file chunk: " + e.getMessage());
+            if (++retryCount <= MAX_RETRY_COUNT) {
+                Log.info("Retrying to write chunk... Attempt " + retryCount);
+                writeChunk(data);
+            } else {
+                state = FileTransferState.FAILED;
+                Log.error("Max retry attempts reached for writing chunk.");
+            }
         }
     }
 

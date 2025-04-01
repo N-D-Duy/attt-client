@@ -10,6 +10,9 @@ import java.io.IOException;
 
 public record Service(Session session) {
 
+    private static final int MAX_RETRY_COUNT = 3;
+    private static int retryCount = 0;
+
     public void sendMessage(Message ms) {
         if (this.session != null) {
             this.session.sendMessage(ms);
@@ -134,8 +137,16 @@ public record Service(Session session) {
                 ds.flush();
                 sendMessage(msg);
                 msg.cleanup();
+                retryCount = 0;
             } catch (Exception ex) {
                 Log.error("Error sending file chunk: " + ex.getMessage());
+                if (++retryCount <= MAX_RETRY_COUNT) {
+                    Log.info("Retrying to send chunk... Attempt " + retryCount);
+                    sendFileChunk();
+                } else {
+                    Log.error("Max retry attempts reached for sending chunk.");
+                    transfer.cancel();
+                }
             }
         }
     }
@@ -145,8 +156,20 @@ public record Service(Session session) {
         if (transfer == null || !transfer.isReceiver()) {
             return;
         }
-        transfer.writeChunk(data);
-        sendChunkAck();
+        try {
+            transfer.writeChunk(data);
+            sendChunkAck();
+            retryCount = 0;
+        } catch (Exception e) {
+            Log.error("Error handling file chunk: " + e.getMessage());
+            if (++retryCount <= MAX_RETRY_COUNT) {
+                Log.info("Retrying to handle chunk... Attempt " + retryCount);
+                handleFileChunk(data);
+            } else {
+                Log.error("Max retry attempts reached for handling chunk.");
+                transfer.cancel();
+            }
+        }
     }
 
     public void sendChunkAck() {
@@ -213,7 +236,7 @@ public record Service(Session session) {
         ms.setCommand(CMD.NOT_AUTH);
         try (DataOutputStream dos = ms.writer()){
             dos.writeByte(CMD.FILE_TRANSFER_CANCEL);
-            dos.writeUTF(transferId);;
+            dos.writeUTF(transferId);
             dos.flush();
             sendMessage(ms);
         } catch (IOException e) {
