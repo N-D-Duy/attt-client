@@ -1,6 +1,9 @@
 package org.duynguyen.atttclient.utils;
 
 import java.io.*;
+import java.lang.reflect.Field;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -123,16 +126,60 @@ public class DesUtils {
             }
     };
 
-    public interface ProgressCallback {
-        void onProgress(double progress);
-    }
-
     public static void encrypt(InputStream input, OutputStream output, byte[] key, ProgressCallback progressCallback) throws IOException {
         processStreamParallel(input, output, key, true, progressCallback);
     }
 
     public static void decrypt(InputStream input, OutputStream output, byte[] key, ProgressCallback progressCallback) throws IOException {
-        processStreamParallel(input, output, key, false, progressCallback);
+        if (output instanceof FileOutputStream) {
+            FileOutputStream fos = (FileOutputStream) output;
+            File tempFile = File.createTempFile("decrypted", ".tmp");
+            try (FileOutputStream tempOut = new FileOutputStream(tempFile)) {
+                processStreamParallel(input, tempOut, key, false, progressCallback);
+                try (FileInputStream tempIn = new FileInputStream(tempFile)) {
+                    copyWithoutPadding(tempIn, fos);
+                }
+            } finally {
+                
+                if (!tempFile.delete()) {
+                    tempFile.deleteOnExit();
+                }
+            }
+        } else {
+            processStreamParallel(input, output, key, false, progressCallback);
+        }
+    }
+
+    private static void copyWithoutPadding(InputStream input, OutputStream output) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buffer = new byte[8192];
+        int bytesRead;
+        while ((bytesRead = input.read(buffer)) != -1) {
+            baos.write(buffer, 0, bytesRead);
+        }
+        byte[] data = baos.toByteArray();
+        if (data.length == 0) return;
+        byte padValue = data[data.length - 1];
+        if (padValue <= 0 || padValue > BLOCK_SIZE || padValue > data.length) {
+            output.write(data);
+            return;
+        }
+
+        boolean validPadding = true;
+        for (int i = data.length - padValue; i < data.length; i++) {
+            if (data[i] != padValue) {
+                validPadding = false;
+                break;
+            }
+        }
+
+        if (validPadding) {
+            output.write(data, 0, data.length - padValue);
+            Log.info("Removed " + padValue + " padding bytes");
+        } else {
+            output.write(data);
+            Log.info("Invalid padding, copied all data");
+        }
     }
 
     private static void processStreamParallel(InputStream input, OutputStream output, byte[] key, boolean encrypt,
@@ -141,7 +188,8 @@ public class DesUtils {
         if (input instanceof FileInputStream) {
             try {
                 totalSize = ((FileInputStream) input).getChannel().size();
-            } catch (IOException ignored) {}
+            } catch (IOException ignored) {
+            }
         }
 
         long processedBytes = 0;
@@ -156,27 +204,25 @@ public class DesUtils {
             int bufferSize = BLOCK_SIZE * 1024;
             byte[] dataBuffer = new byte[bufferSize];
 
-            long originalDataSize = 0;
             int bytesRead;
-
             while ((bytesRead = input.read(dataBuffer)) > 0) {
                 byte[] chunk = Arrays.copyOf(dataBuffer, bytesRead);
                 byte[] result = processChunkParallel(chunk, subKeys, encrypt, executor);
                 output.write(result);
+
                 processedBytes += bytesRead;
-                originalDataSize += bytesRead;
                 if (progressCallback != null && totalSize > 0) {
                     progressCallback.onProgress((double) processedBytes / totalSize);
                 }
             }
 
-            if (encrypt && originalDataSize % BLOCK_SIZE != 0) {
-                byte padValue = (byte) (BLOCK_SIZE - (originalDataSize % BLOCK_SIZE));
+            /*if (encrypt && bytesRead % BLOCK_SIZE != 0) {
+                byte padValue = (byte) (BLOCK_SIZE - (bytesRead % BLOCK_SIZE));
                 byte[] padding = new byte[padValue];
                 Arrays.fill(padding, padValue);
                 byte[] result = processChunkParallel(padding, subKeys, true, executor);
                 output.write(result);
-            }
+            }*/
         } finally {
             executor.shutdown();
             try {
@@ -196,14 +242,17 @@ public class DesUtils {
         byte[] paddedData;
         if (data.length % BLOCK_SIZE == 0) {
             paddedData = data;
-        } else {
+        } else if (encrypt) {
             paddedData = new byte[numBlocks * BLOCK_SIZE];
             System.arraycopy(data, 0, paddedData, 0, data.length);
             byte padValue = (byte) (paddedData.length - data.length);
-            for (int i = data.length; i < paddedData.length; i++) {
-                paddedData[i] = padValue;
-            }
+            Arrays.fill(paddedData, data.length, paddedData.length, padValue);
+            Log.info("Added " + padValue + " padding bytes with value " + (int)padValue);
+        } else {
+            paddedData = new byte[numBlocks * BLOCK_SIZE];
+            System.arraycopy(data, 0, paddedData, 0, data.length);
         }
+
         byte[] result = new byte[numBlocks * BLOCK_SIZE];
         List<Future<BlockResult>> futures = new ArrayList<>();
         for (int i = 0; i < numBlocks; i++) {
@@ -231,10 +280,6 @@ public class DesUtils {
         return result;
     }
 
-    private record BlockResult(int index, byte[] data) {
-    }
-
-
     private static void processBlock(byte[] input, byte[] output, long[] subKeys) {
         long block = bytesToLong(input);
         block = permute(block, IP, 64);
@@ -249,7 +294,6 @@ public class DesUtils {
         block = permute(block, FP, 64);
         longToBytes(block, output);
     }
-
 
     private static int feistel(int right, long subKey) {
         long expanded = permute(right & 0xFFFFFFFFL, E, 48);
@@ -298,7 +342,6 @@ public class DesUtils {
         return result;
     }
 
-
     private static long bytesToLong(byte[] bytes) {
         long result = 0;
         for (int i = 0; i < 8; i++) {
@@ -306,7 +349,6 @@ public class DesUtils {
         }
         return result;
     }
-
 
     private static void longToBytes(long value, byte[] bytes) {
         for (int i = 7; i >= 0; i--) {
@@ -327,28 +369,33 @@ public class DesUtils {
         try (ByteArrayInputStream input = new ByteArrayInputStream(data);
              ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             decrypt(input, output, key, null);
-            return removePadding(output.toByteArray());
+            byte[] result = output.toByteArray();
+            return removePadding(result);
         }
     }
 
     private static byte[] removePadding(byte[] data) {
-        if (data.length == 0) {
+        if (data.length < BLOCK_SIZE) {
             return data;
         }
-
         byte padValue = data[data.length - 1];
-        if (padValue <= 0 || padValue > BLOCK_SIZE) {
+        if (padValue <= 0 || padValue > BLOCK_SIZE || padValue > data.length) {
             return data;
         }
-
         for (int i = data.length - padValue; i < data.length; i++) {
             if (data[i] != padValue) {
                 return data;
             }
         }
-
         byte[] result = new byte[data.length - padValue];
         System.arraycopy(data, 0, result, 0, result.length);
         return result;
+    }
+
+    public interface ProgressCallback {
+        void onProgress(double progress);
+    }
+
+    private record BlockResult(int index, byte[] data) {
     }
 }

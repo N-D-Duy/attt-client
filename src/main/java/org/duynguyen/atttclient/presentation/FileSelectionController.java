@@ -60,14 +60,6 @@ public class FileSelectionController implements FileTransfer.TransferCompleteLis
         timeRemainingLabel.setText("Time remaining: " + estimatedTime);
     }
 
-    @FXML
-    private void onSendFile() {
-        if (encryptedFile != null) {
-            session.getService().sendFileInfo(fileTransfer.getTransferId(), selectedFile.getName(), encryptedFile.length());
-            btnSendFile.setDisable(true);
-            fileInfoLabel.setText("Sending file...");
-        }
-    }
 
     @Override
     public void onTransferComplete() {
@@ -154,6 +146,14 @@ public class FileSelectionController implements FileTransfer.TransferCompleteLis
                 Log.error(e);
                 fileInfoLabel.setText("Error: " + e.getMessage());
             }
+        }
+    }
+    @FXML
+    private void onSendFile() {
+        if (encryptedFile != null) {
+            session.getService().sendFileInfo(fileTransfer.getTransferId(), selectedFile.getName(), encryptedFile.length());
+            btnSendFile.setDisable(true);
+            fileInfoLabel.setText("Sending file...");
         }
     }
 }

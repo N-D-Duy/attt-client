@@ -112,3 +112,10 @@ java.net.SocketException: Broken pipe
 [2025-03-29 17:22:44 ERROR (ForkJoinPool.commonPool-worker-2)] - java.net.ConnectException: Connection refused
 [2025-03-29 17:23:45 ERROR (Thread-2)] - message not auth: Not on FX application thread; currentThread = Thread-2
 [2025-03-29 21:00:16 ERROR (ForkJoinPool.commonPool-worker-2)] - java.net.ConnectException: Connection refused
+[2025-04-02 23:09:06 ERROR (Thread-4)] - Error decrypting file: null
+[2025-04-02 23:12:57 ERROR (Thread-3)] - Error decrypting file: null
+[2025-04-02 23:17:04 ERROR (Thread-3)] - Error decrypting file: null
+[2025-04-02 23:28:47 ERROR (Thread-3)] - Error decrypting file: null
+[2025-04-02 23:30:11 ERROR (Thread-3)] - Error decrypting file: null
+[2025-04-02 23:37:53 ERROR (Thread-3)] - Error decrypting file: null
+[2025-04-02 23:40:58 ERROR (Thread-3)] - Error decrypting file: null
