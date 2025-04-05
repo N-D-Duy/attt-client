@@ -9,14 +9,8 @@ import org.duynguyen.atttclient.network.Session;
 import org.duynguyen.atttclient.utils.DesUtils;
 import org.duynguyen.atttclient.utils.Log;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.Arrays;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Getter
@@ -133,13 +127,37 @@ public class FileTransfer {
         if (file == null || !file.exists()) {
             throw new IllegalArgumentException("File does not exist!");
         }
-        File encryptedFile = new File(file.getParent(), file.getName() + ".des");
+
+        String encryptDir = System.getProperty("user.dir") + File.separator + "ATTTClient_Files";
+        File directory = new File(encryptDir);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        File encryptedFile = new File(directory, file.getName() + ".des");
+        File encryptedTxtFile = new File(directory, file.getName() + ".txt");
+
         startTime = System.currentTimeMillis();
 
         try (FileInputStream fis = new FileInputStream(file);
              FileOutputStream fos = new FileOutputStream(encryptedFile)) {
             DesUtils.encrypt(fis, fos, keyDes, this::updateProgress);
         }
+
+        try (FileInputStream desInput = new FileInputStream(encryptedFile);
+             FileOutputStream txtOutput = new FileOutputStream(encryptedTxtFile)) {
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+
+            while ((bytesRead = desInput.read(buffer)) != -1) {
+                byte[] chunk = Arrays.copyOf(buffer, bytesRead);
+                String base64 = java.util.Base64.getEncoder().encodeToString(chunk);
+                txtOutput.write(base64.getBytes());
+            }
+        }
+
+        Log.info(Arrays.toString(keyDes));
+
         return encryptedFile;
     }
 
