@@ -40,3 +40,5 @@ build/
 config.properties
 received_files/
 logs/
+
+java.io.*

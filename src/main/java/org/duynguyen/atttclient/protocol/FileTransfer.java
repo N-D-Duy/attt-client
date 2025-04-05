@@ -1,6 +1,8 @@
 package org.duynguyen.atttclient.protocol;
 
 import javafx.application.Platform;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
 import org.duynguyen.atttclient.network.Session;
@@ -12,6 +14,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Getter
@@ -111,21 +116,11 @@ public class FileTransfer {
 
     public void prepareForReceiving(String fileName, long fileSize) {
         try {
-            String appDirectory = System.getProperty("user.dir");
-            File targetDirectory = new File(appDirectory, "received_files");
-
-            if (!targetDirectory.exists()) {
-                boolean created = targetDirectory.mkdirs();
-                if (!created) {
-                    Log.error("Cannot create directory: " + targetDirectory.getAbsolutePath());
-                    this.state = FileTransferState.FAILED;
-                    return;
-                }
-            }
             this.fileName = fileName;
             this.fileSize = fileSize;
-            this.targetFile = new File(targetDirectory, fileName);
-            this.encryptedFile = new File(targetDirectory, fileName + ".des");
+
+            String tempDir = System.getProperty("java.io.tmpdir");
+            this.encryptedFile = new File(tempDir, fileName + ".des");
             this.fileOutputStream = new FileOutputStream(encryptedFile);
             this.state = FileTransferState.TRANSFERRING;
         } catch (Exception e) {
@@ -143,37 +138,9 @@ public class FileTransfer {
 
         try (FileInputStream fis = new FileInputStream(file);
              FileOutputStream fos = new FileOutputStream(encryptedFile)) {
-            DesUtils.encrypt(fis, fos, keyDes, new DesUtils.ProgressCallback() {
-                @Override
-                public void onProgress(double progress) {
-                    updateProgress(progress);
-                }
-            });
+            DesUtils.encrypt(fis, fos, keyDes, this::updateProgress);
         }
         return encryptedFile;
-    }
-
-    public void decryptFile() {
-        try {
-            this.state = FileTransferState.DECRYPTING;
-            startTime = System.currentTimeMillis();
-
-            try (FileInputStream fis = new FileInputStream(encryptedFile);
-                 FileOutputStream fos = new FileOutputStream(targetFile)) {
-                DesUtils.decrypt(fis, fos, keyDes, this::updateProgress);
-            }
-            if (encryptedFile.exists()) {
-                if (encryptedFile.delete()) {
-                    Log.info("Encrypted file has been deleted");
-                } else {
-                    Log.error("Cannot delete encrypted file");
-                }
-            }
-            this.state = FileTransferState.COMPLETED;
-        } catch (Exception e) {
-            this.state = FileTransferState.FAILED;
-            Log.error("Error decrypting file: " + e.getMessage());
-        }
     }
 
     private void updateProgress(double progress) {
@@ -271,8 +238,43 @@ public class FileTransfer {
             if (fileOutputStream != null) {
                 fileOutputStream.close();
             }
+
             if (isReceiver()) {
-                decryptFile();
+                this.state = FileTransferState.DECRYPTING;
+
+                Platform.runLater(() -> {
+                    try {
+                        FileChooser fileChooser = new FileChooser();
+                        fileChooser.setTitle("Save Received File");
+                        fileChooser.setInitialFileName(fileName);
+
+                        String extension = getFileExtension(fileName);
+                        if (!extension.isEmpty()) {
+                            FileChooser.ExtensionFilter filter =
+                                    new FileChooser.ExtensionFilter(
+                                            extension.toUpperCase() + " files", "*." + extension);
+                            fileChooser.getExtensionFilters().add(filter);
+                        }
+
+                        Stage stage = new Stage();
+                        this.targetFile = fileChooser.showSaveDialog(stage);
+
+                        if (targetFile != null) {
+                            new Thread(this::decryptToTargetLocation).start();
+                        } else {
+                            state = FileTransferState.FAILED;
+                            if (listener != null) {
+                                listener.onTransferFailed("File save canceled by user");
+                            }
+                        }
+                    } catch (Exception e) {
+                        state = FileTransferState.FAILED;
+                        Log.error("Error selecting save location: " + e.getMessage());
+                        if (listener != null) {
+                            listener.onTransferFailed(e.getMessage());
+                        }
+                    }
+                });
             } else {
                 state = FileTransferState.COMPLETED;
                 if (listener != null) {
@@ -286,6 +288,47 @@ public class FileTransfer {
                 listener.onTransferFailed(e.getMessage());
             }
         }
+    }
+
+    private void decryptToTargetLocation() {
+        try {
+            startTime = System.currentTimeMillis();
+
+            try (FileInputStream fis = new FileInputStream(encryptedFile);
+                 FileOutputStream fos = new FileOutputStream(targetFile)) {
+                DesUtils.decrypt(fis, fos, keyDes, this::updateProgress);
+                fos.flush();
+            }
+
+            if (encryptedFile.exists()) {
+                if (encryptedFile.delete()) {
+                    Log.info("Encrypted file has been deleted");
+                } else {
+                    Log.error("Cannot delete encrypted file");
+                }
+            }
+
+            state = FileTransferState.COMPLETED;
+
+            if (listener != null) {
+                Platform.runLater(() -> listener.onTransferComplete());
+            }
+        } catch (Exception e) {
+            state = FileTransferState.FAILED;
+            Log.error("Error decrypting file: " + e.getMessage());
+
+            if (listener != null) {
+                Platform.runLater(() -> listener.onTransferFailed(e.getMessage()));
+            }
+        }
+    }
+
+    private String getFileExtension(String fileName) {
+        int lastDotIndex = fileName.lastIndexOf('.');
+        if (lastDotIndex > 0) {
+            return fileName.substring(lastDotIndex + 1);
+        }
+        return "";
     }
 
     public void cancel() {
