@@ -2,7 +2,6 @@ package org.duynguyen.atttclient;
 
 import java.io.IOException;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -26,25 +25,28 @@ public class HelloApplication extends Application {
     stage.setScene(scene);
     GlobalUI.init(stage);
     stage.setOnCloseRequest(
-            event -> {
-              System.out.println("Closing application...");
-              closeConnection();
-            });
+        event -> {
+          System.out.println("Closing application...");
+          closeConnection();
+        });
     stage.show();
     establishConnection();
   }
 
   public static void main(String[] args) {
-    connectionManager = new ConnectionManager("localhost", 1690);
+    connectionManager = new ConnectionManager("20.243.124.24", 1690);
     launch();
   }
 
   private void establishConnection() {
-    connectionManager.connect()
-            .thenAccept(s -> {
+    connectionManager
+        .connect()
+        .thenAccept(
+            s -> {
               session = s;
             })
-            .exceptionally(ex -> {
+        .exceptionally(
+            ex -> {
               Log.error("Failed to connect: " + ex.getMessage());
               return null;
             });
@@ -64,3 +66,4 @@ public class HelloApplication extends Application {
     }
   }
 }
+

@@ -120,3 +120,5 @@ java.net.SocketException: Broken pipe
 [2025-04-02 23:37:53 ERROR (Thread-3)] - Error decrypting file: null
 [2025-04-02 23:40:58 ERROR (Thread-3)] - Error decrypting file: null
 [2025-04-03 08:30:28 ERROR (Thread-4)] - message auth: Cannot invoke "org.duynguyen.atttclient.presentation.MainController.setUsers(java.util.List)" because the return value of "org.duynguyen.atttclient.presentation.MainController.getInstance()" is null
+[2025-04-09 20:11:44 ERROR (ForkJoinPool.commonPool-worker-2)] - java.net.ConnectException: Connection refused
+[2025-04-09 22:04:47 ERROR (Thread-7)] - Error decrypting file: /tmp/learnByYourHeart.txt.des (No such file or directory)
